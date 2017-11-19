@@ -23,13 +23,13 @@ It's pretty short and simple.
 
 ## Contribution
 
-* Please do not send the code you didn't wrote.
+* Please do not send the code that isn't yours.
   Or if you do not agree to publish it under the terms of MPL 2.0.
 * Please, add *your* copyright and the license header to your files.
 
-Currently, the filter is **very very very slow.**
+Currently, the filter is **very very very very slow.**
 I was wondering if one may be able to write a faster version.
 
 I will likely merge a pull request with a working implementation written
-in any suitable programming language (Go/C/D/Nim/Haskell?).
-It just must be in a separate folder like the prototype does
+in any suitable programming language (Go/C/D/Nim/Haskell/Lisp/Cobol?).
+It just must be in a separate folder like the prototype does.
