@@ -21,7 +21,7 @@ It's pretty short and simple.
 
     lineara source.jpg | python_prototype/flood.py | lineara -b result.png
 
-## Contribution
+## Contributing
 
 * Please do not send the code that isn't yours.
   Or if you do not agree to publish it under the terms of MPL 2.0.
