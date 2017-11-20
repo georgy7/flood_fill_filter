@@ -1,3 +1,6 @@
 *.pyc
 __pycache__
+c/flood
+c/flood.exe
+c/.codelite
 
