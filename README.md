@@ -19,7 +19,7 @@ It's pretty short and simple.
 
 ## Usage
 
-    lineara source.jpg | python_prototype/flood.py | lineara -b result.png
+    lineara source.jpg | c/flood | lineara -b result.png
 
 ## Contributing
 
@@ -27,8 +27,9 @@ It's pretty short and simple.
   Or if you do not agree to publish it under the terms of MPL 2.0.
 * Please, add *your* copyright and the license header to your files.
 
-Currently, the filter is **very very very very slow.**
+Currently, the filter (even the C imlementation) is very very slow.
 I was wondering if one may be able to write a faster version.
+Or to optimize the existing C implementation.
 
 I will likely merge a pull request with a working implementation written
 in any suitable programming language (Go/C/D/Nim/Haskell/Lisp/Cobol?).
