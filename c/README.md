@@ -25,10 +25,10 @@ STDIN image size: 454x206.
 % time ./test_c.sh 
 Image 454x206 (3 channels).
 STDIN image size: 454x206.
-20.916u 0.007s 0:20.92 99.9%    15+167k 9+1io 0pf+0w
+16.643u 0.007s 0:16.65 99.9%    15+167k 10+1io 0pf+0w
 ```
 
-131.4 / 20.9 ~= 6 times faster
+131.4 / 16.6 ~= 7.9 times faster
 
 ## Third-party code
 
