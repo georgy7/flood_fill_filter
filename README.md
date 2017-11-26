@@ -25,7 +25,7 @@ It's pretty short and simple.
 
 * Please do not send the code that isn't yours.
   Or if you do not agree to publish it under the terms of MPL 2.0.
-* Please, add *your* copyright and the license header to your files.
+* Please, add *your* copyright to the files you add/modify.
 
 Currently, the filter (even the C imlementation) is very very slow.
 I was wondering if one may be able to write a faster version.
