@@ -147,6 +147,9 @@ static void stop_check_step_if_it_is_time_to_stop(FloodFiller * self) {
     float resultRatio = (float)(result_count - 1) / (float)(MAX_WINDOW_SIZE - 1);
     if (resultRatio > RATIO_THRESHOLD) {
         // Stop.
+        for (int i = 0; i <= self->stack_head; i++) {
+            free(self->stack[i]);
+        }
         self->stack_head = -1;
     }
 }

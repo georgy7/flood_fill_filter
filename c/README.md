@@ -22,10 +22,11 @@ STDIN image size: 454x206.
 131.26466250419617
 131.357u 0.015s 2:11.41 99.9%   5+167k 272+1io 0pf+0w
 
-% time ./test_c.sh 
+% time ./test_c.sh
 Image 454x206 (3 channels).
+The maximum stack length is 38.
 STDIN image size: 454x206.
-16.643u 0.007s 0:16.65 99.9%    15+167k 10+1io 0pf+0w
+2.899u 0.007s 0:02.90 99.6%     17+168k 10+1io 0pf+0w
 ```
 
-131.4 / 16.6 ~= 7.9 times faster
+131.4 / 2.9 ~= 45 times faster
