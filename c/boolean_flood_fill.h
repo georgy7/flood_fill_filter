@@ -125,6 +125,28 @@ static bool equals_to_start(FloodFiller * self, int x, int y) {
     return self->equal(self->filter, x, y, self->startx, self->starty);
 }
 
+static void stop_check_step_if_it_is_time_to_stop(FloodFiller * self, Stack * check_stack) {
+    int resultHeight = self->max_y - self->min_y + 1;
+    int resultWidth = self->max_x - self->min_x + 1;
+
+    int result_count = 0;
+    for (int y = 0; y < resultHeight; y++) {
+        for (int x = 0; x < resultWidth; x++) {
+            if (self->result[y * resultWidth + x]) {
+                result_count++;
+            }
+        }
+    }
+
+    float resultRatio = (float)(result_count - 1) / (float)(MAX_WINDOW_SIZE - 1);
+    if (resultRatio > RATIO_THRESHOLD) {
+        // Stop.
+        while(check_stack->last != NULL){
+            popStack(check_stack);
+        }
+    }
+}
+
 static void check_step(FloodFiller * self, Stack * check_stack) {
     FloodFillerStackItem * full_state = (FloodFillerStackItem*) getFieldValue(getElement(check_stack));
     int x = full_state->x;
@@ -145,6 +167,7 @@ static void check_step(FloodFiller * self, Stack * check_stack) {
         } else if (equals_to_start(self, x, y)) {
             self->result[(y - self->min_y) * resultWidth + (x - self->min_x)] = true;
             full_state->state = 1;
+            stop_check_step_if_it_is_time_to_stop(self, check_stack);
         } else {
             popStack(check_stack);
         }

@@ -6,6 +6,9 @@
 // Author: Georgy Ustinov
 // November 2017
 
+#define RATIO_THRESHOLD 0.45
+#define MAX_WINDOW_SIZE 81
+
 #include "streams.h"
 #include "window_flood_fill_filter.h"
 #include <math.h>
@@ -43,7 +46,7 @@ float * floodfiltered(float * yXYZ,
             w, h);
 
     for (long i = 0; i < w * h; i++) {
-        if (result[i] > 0.45) {
+        if (result[i] > RATIO_THRESHOLD) {
             result[i] = 1.0;
         } else {
             result[i] = 0.0;
