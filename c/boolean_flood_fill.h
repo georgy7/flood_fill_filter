@@ -13,6 +13,7 @@ typedef struct FloodFiller {
     bool (*equal)(Filter *, int, int, int, int);
     bool * result;
     Filter * filter;
+    long max_stack_length;
 } FloodFiller;
 
 typedef struct FloodFillerStackItem {
@@ -28,12 +29,12 @@ static inline FloodFillerStackItem * allocate(int x, int y, int state) {
     result->state = state;
     return result;
 }
-static inline int stackLength(Stack * stack) {
+static inline long stackLength(Stack * stack) {
     if (stack->last == NULL) {
         return 0;
     }
 
-    int len = 1;
+    long len = 1;
     Node * node = stack->last;
     while (node->next != NULL) {
         len++;
@@ -125,6 +126,11 @@ static bool equals_to_start(FloodFiller * self, int x, int y) {
     return self->equal(self->filter, x, y, self->startx, self->starty);
 }
 
+static void remember_max_stack_length(FloodFiller * self, Stack * check_stack) {
+    long current = stackLength(check_stack);
+    self->max_stack_length = lmax(self->max_stack_length, current);
+}
+
 static void stop_check_step_if_it_is_time_to_stop(FloodFiller * self, Stack * check_stack) {
     int resultHeight = self->max_y - self->min_y + 1;
     int resultWidth = self->max_x - self->min_x + 1;
@@ -167,6 +173,7 @@ static void check_step(FloodFiller * self, Stack * check_stack) {
         } else if (equals_to_start(self, x, y)) {
             self->result[(y - self->min_y) * resultWidth + (x - self->min_x)] = true;
             full_state->state = 1;
+            remember_max_stack_length(self, check_stack);
             stop_check_step_if_it_is_time_to_stop(self, check_stack);
         } else {
             popStack(check_stack);
@@ -207,6 +214,7 @@ inline FloodFiller * newFloodFiller(
     filler->result = allocateBooleanLayer(9, 9);
     filler->equal = compare;
     filler->filter = filterPtr;
+    filler->max_stack_length = 1;
     return filler;
 }
 

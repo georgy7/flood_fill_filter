@@ -25,6 +25,9 @@ for the current).
 static inline int imax(int a, int b) {
     return (a > b) ? a : b;
 }
+static inline long lmax(long a, long b) {
+    return (a > b) ? a : b;
+}
 
 static inline int imin(int a, int b) {
     return (a < b) ? a : b;
@@ -57,6 +60,8 @@ static float * process(Filter * self) {
             result[(self->w) * y + x] = process_window(self, x, y, floodFiller);
         }
     }
+
+    logT("The maximum stack length is %d.\n", floodFiller->max_stack_length);
 
     destructFloodFiller(floodFiller);
     return result;
