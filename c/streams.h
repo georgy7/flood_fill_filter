@@ -52,7 +52,8 @@ void readImage(struct App * appRef) {
     (*appRef).pixels = calloc(countOfFloats, sizeof(float));
     (*appRef).result = calloc(countOfFloats, sizeof(float));
 
-    size_t floatsRead = fread((appRef->pixels), sizeof(float), countOfFloats, stdin);
+    fread((appRef->pixels), sizeof(float), countOfFloats, stdin);
+    // size_t floatsRead = fread((appRef->pixels), sizeof(float), countOfFloats, stdin);
     // logT("\n%zd floats read.\n\n", floatsRead);
 }
 
@@ -74,5 +75,10 @@ float * allocateLayer(int32_t w, int32_t h) {
 
 bool * allocateBooleanLayer(int32_t w, int32_t h) {
     bool * layer = calloc(w * h, sizeof(bool));
+    return layer;
+}
+
+long * allocateLongsLayer(int32_t w, int32_t h) {
+    long * layer = calloc(w * h, sizeof(long));
     return layer;
 }

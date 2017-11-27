@@ -20,6 +20,8 @@ for the current).
 // This is the importance (0-1).
 #define CHROMA_FACTOR 0.25
 
+#include <math.h>
+
 static inline int imax(int a, int b) {
     return (a > b) ? a : b;
 }
@@ -41,17 +43,22 @@ typedef struct Filter {
 
 #include "boolean_flood_fill.h"
 
-static float process_window(Filter * self, int x, int y);
+static float process_window(Filter * self, int x, int y, FloodFiller * floodFiller);
 static float window_square(int left_border, int right_border, int top_border, int bottom_border);
+bool compare(Filter * self, int x1, int y1, int x2, int y2);
 
 static float * process(Filter * self) {
     float * result = allocateLayer(self->w, self->h);
 
+    FloodFiller * floodFiller = newFloodFiller(self, &compare);
+
     for (int y = 0; y < (self->h); y++) {
         for (int x = 0; x < (self->w); x++) {
-            result[(self->w) * y + x] = process_window(self, x, y);
+            result[(self->w) * y + x] = process_window(self, x, y, floodFiller);
         }
     }
+
+    destructFloodFiller(floodFiller);
     return result;
 }
 
@@ -60,13 +67,7 @@ bool compare(Filter * self, int x1, int y1, int x2, int y2) {
             self->yGammaLowWhite[(self->w) * y1 + x1] -
             self->yGammaLowWhite[(self->w) * y2 + x2]) < (self->y_threshold));
 
-/*
-    logT("%f %f %f\n", self->yGammaLowWhite[(self->w) * y1 + x1], self->yGammaLowWhite[(self->w) * y2 + x2], self->y_threshold);
-    if (y_equal) {
-        logT("y_equal\n");
-    }
-*/
-
+    //logT("x1,y1,x2,y2 = %d %d %d %d\t\tyG1,yG2 = %f %f\n\t\t\ty_threshold = %f\n", x1,y1,x2,y2,self->yGammaLowWhite[(self->w) * y1 + x1], self->yGammaLowWhite[(self->w) * y2 + x2], self->y_threshold);
     if (y_equal && ((self->yGammaLowWhite[(self->w) * y1 + x1] > 0.9) ||
             (self->yGammaLowWhite[(self->w) * y2 + x2] > 0.9))) {
         return true;
@@ -85,14 +86,14 @@ bool compare(Filter * self, int x1, int y1, int x2, int y2) {
     }
 }
 
-static float process_window(Filter * self, int x, int y) {
+static float process_window(Filter * self, int x, int y, FloodFiller * floodFiller) {
     int radius = self->radius;
     int l = imax(0, x - radius);
     int t = imax(0, y - radius);
     int r = imin((self->w) - 1, x + radius);
     int b = imin((self->h) - 1, y + radius);
 
-    struct BoolMatrix boolmatrix = boolean_flood_fill(self, x, y, l, t, r, b, &compare);
+    struct BoolMatrix boolmatrix = boolean_flood_fill(x, y, l, t, r, b, floodFiller);
     float count = boolmatrix.sum - 1;
 
     float square = window_square(l, r, t, b) - 1;

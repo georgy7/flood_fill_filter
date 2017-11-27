@@ -79,6 +79,9 @@ static void check_step(FloodFiller * self, Stack * check_stack);
 
 static BoolMatrix processFloodFiller(FloodFiller * self) {
     Stack * check_stack = createStack();
+
+    int resultHeight = self->max_y - self->min_y + 1;
+    int resultWidth = self->max_x - self->min_x + 1;
     
     // logT(" >>>> x y %d %d\n", self->startx, self->starty);
     insertElement(check_stack, allocate(self->startx, self->starty, 0), 1);
@@ -92,8 +95,6 @@ static BoolMatrix processFloodFiller(FloodFiller * self) {
     BoolMatrix bm;
     bm.sum = 0;
 
-    int resultHeight = self->max_y - self->min_y + 1;
-    int resultWidth = self->max_x - self->min_x + 1;
     for (int y = 0; y < resultHeight; y++) {
         for (int x = 0; x < resultWidth; x++) {
             if (self->result[y * resultWidth + x]) {
@@ -108,6 +109,7 @@ static BoolMatrix processFloodFiller(FloodFiller * self) {
     }
 */
 
+    clearStack(check_stack);
     return bm;
 }
 
@@ -129,7 +131,7 @@ static void check_step(FloodFiller * self, Stack * check_stack) {
     int y = full_state->y;
     int resultWidth = self->max_x - self->min_x + 1;
 
-    // logT("x,min,max = %d %d %d    y,min,max = %d %d %d\n", x, self->min_x, self->max_x, y, self->min_y, self->max_y);
+    // logT("x,min,max,start = %d %d %d %d    y,min,max,start = %d %d %d %d\n", x, self->min_x, self->max_x, self->startx, y, self->min_y, self->max_y, self->starty);
     if ((x < self->min_x) || (y < self->min_y) || (x > self->max_x) || (y > self->max_y)) {
 
         popStack(check_stack);
@@ -174,26 +176,42 @@ static void check_step(FloodFiller * self, Stack * check_stack) {
 
 // ------------------------------
 
-struct BoolMatrix boolean_flood_fill(Filter * filterPtr,
-        int x, int y, int l, int t, int r, int b,
+inline FloodFiller * newFloodFiller(
+        Filter * filterPtr,
         bool (*compare)(struct Filter *, int, int, int, int)) {
+    FloodFiller * filler = malloc(sizeof(FloodFiller));
+    filler->selected_points = allocateLongsLayer(9, 9);
+    filler->result = allocateBooleanLayer(9, 9);
+    filler->equal = compare;
+    filler->filter = filterPtr;
+    return filler;
+}
 
-    FloodFiller filler;
-    filler.selected_points = allocateLayer(r - l + 1, b - t + 1);
-    filler.selected_points_count = 0;
-    filler.startx = x;
-    filler.starty = y;
-    filler.min_x = l;
-    filler.min_y = t;
-    filler.max_x = r;
-    filler.max_y = b;
-    filler.equal = compare;
-    filler.result = allocateBooleanLayer(r - l + 1, b - t + 1);
-    filler.filter = filterPtr;
+inline void destructFloodFiller(FloodFiller * filler) {
+    free(filler->selected_points);
+    free(filler->result);
+    free(filler);
+}
 
-    BoolMatrix result = processFloodFiller(&filler);
-    free(filler.selected_points);
-    free(filler.result);
 
+
+struct BoolMatrix boolean_flood_fill(
+        int x, int y, int l, int t, int r, int b,
+        FloodFiller * filler) {
+
+    filler->selected_points_count = 0;
+    filler->startx = x;
+    filler->starty = y;
+    filler->min_x = l;
+    filler->min_y = t;
+    filler->max_x = r;
+    filler->max_y = b;
+
+    for (int i = 0; i < 81; i++) {
+        filler->selected_points[i] = 0;
+        filler->result[i] = false;
+    }
+
+    BoolMatrix result = processFloodFiller(filler);
     return result;
 }
