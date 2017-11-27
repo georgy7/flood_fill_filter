@@ -29,7 +29,3 @@ STDIN image size: 454x206.
 ```
 
 131.4 / 16.6 ~= 7.9 times faster
-
-## Third-party code
-
-https://github.com/LorhanSohaky/Stack (MIT)

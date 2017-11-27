@@ -1,5 +1,15 @@
 
-#include "Stack.h"
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Copyright (C) 2017 Georgy Ustinov
+
+typedef struct FloodFillerStackItem {
+    int x;
+    int y;
+    int state;
+} FloodFillerStackItem;
 
 typedef struct FloodFiller {
     long * selected_points; // Array with capacity w*h (of the window).
@@ -13,14 +23,12 @@ typedef struct FloodFiller {
     bool (*equal)(Filter *, int, int, int, int);
     bool * result;
     Filter * filter;
+
+    FloodFillerStackItem ** stack; // An array of pointers.
+    long stack_head;
+
     long max_stack_length;
 } FloodFiller;
-
-typedef struct FloodFillerStackItem {
-    int x;
-    int y;
-    int state;
-} FloodFillerStackItem;
 
 static inline FloodFillerStackItem * allocate(int x, int y, int state) {
     FloodFillerStackItem * result = malloc(sizeof(FloodFillerStackItem));
@@ -29,18 +37,8 @@ static inline FloodFillerStackItem * allocate(int x, int y, int state) {
     result->state = state;
     return result;
 }
-static inline long stackLength(Stack * stack) {
-    if (stack->last == NULL) {
-        return 0;
-    }
-
-    long len = 1;
-    Node * node = stack->last;
-    while (node->next != NULL) {
-        len++;
-        node = node->next;
-    }
-    return len;
+static inline long stackLength(FloodFiller * self) {
+    return 1 + self->stack_head;
 }
 
 
@@ -76,20 +74,20 @@ typedef struct BoolMatrix {
     int sum;
 } BoolMatrix;
 
-static void check_step(FloodFiller * self, Stack * check_stack);
+static void check_step(FloodFiller * self);
+static void insertElement(FloodFiller * self, FloodFillerStackItem * item);
 
 static BoolMatrix processFloodFiller(FloodFiller * self) {
-    Stack * check_stack = createStack();
 
     int resultHeight = self->max_y - self->min_y + 1;
     int resultWidth = self->max_x - self->min_x + 1;
     
     // logT(" >>>> x y %d %d\n", self->startx, self->starty);
-    insertElement(check_stack, allocate(self->startx, self->starty, 0), 1);
+    insertElement(self, allocate(self->startx, self->starty, 0));
 
     int counter = 0;
-    while (stackLength(check_stack) > 0) {
-        check_step(self, check_stack);
+    while (stackLength(self) > 0) {
+        check_step(self);
         counter++;
     }
 
@@ -110,28 +108,30 @@ static BoolMatrix processFloodFiller(FloodFiller * self) {
     }
 */
 
-    clearStack(check_stack);
+    self->stack_head = -1;
     return bm;
 }
 
-static void popStack(Stack * stack) {
-    void * v = getFieldValue(getElement(stack));
-    if (v != 0) {
-        free(v);
-    }
-    nextElement(stack);
+static void popStack(FloodFiller * self) {
+    FloodFillerStackItem * v = self->stack[self->stack_head];
+    free(v);
+    self->stack_head--;
+}
+static void insertElement(FloodFiller * self, FloodFillerStackItem * item) {
+    self->stack_head++;
+    self->stack[self->stack_head] = item;
 }
 
 static bool equals_to_start(FloodFiller * self, int x, int y) {
     return self->equal(self->filter, x, y, self->startx, self->starty);
 }
 
-static void remember_max_stack_length(FloodFiller * self, Stack * check_stack) {
-    long current = stackLength(check_stack);
+static void remember_max_stack_length(FloodFiller * self) {
+    long current = stackLength(self);
     self->max_stack_length = lmax(self->max_stack_length, current);
 }
 
-static void stop_check_step_if_it_is_time_to_stop(FloodFiller * self, Stack * check_stack) {
+static void stop_check_step_if_it_is_time_to_stop(FloodFiller * self) {
     int resultHeight = self->max_y - self->min_y + 1;
     int resultWidth = self->max_x - self->min_x + 1;
 
@@ -147,14 +147,12 @@ static void stop_check_step_if_it_is_time_to_stop(FloodFiller * self, Stack * ch
     float resultRatio = (float)(result_count - 1) / (float)(MAX_WINDOW_SIZE - 1);
     if (resultRatio > RATIO_THRESHOLD) {
         // Stop.
-        while(check_stack->last != NULL){
-            popStack(check_stack);
-        }
+        self->stack_head = -1;
     }
 }
 
-static void check_step(FloodFiller * self, Stack * check_stack) {
-    FloodFillerStackItem * full_state = (FloodFillerStackItem*) getFieldValue(getElement(check_stack));
+static void check_step(FloodFiller * self) {
+    FloodFillerStackItem * full_state = self->stack[self->stack_head];
     int x = full_state->x;
     int y = full_state->y;
     int resultWidth = self->max_x - self->min_x + 1;
@@ -162,43 +160,43 @@ static void check_step(FloodFiller * self, Stack * check_stack) {
     // logT("x,min,max,start = %d %d %d %d    y,min,max,start = %d %d %d %d\n", x, self->min_x, self->max_x, self->startx, y, self->min_y, self->max_y, self->starty);
     if ((x < self->min_x) || (y < self->min_y) || (x > self->max_x) || (y > self->max_y)) {
 
-        popStack(check_stack);
+        popStack(self);
 
     } else if (full_state->state == 0) {
         
         // logT("full_state->state == 0\n");
 
         if (has(self, x, y)) {
-            popStack(check_stack);
+            popStack(self);
         } else if (equals_to_start(self, x, y)) {
             self->result[(y - self->min_y) * resultWidth + (x - self->min_x)] = true;
             full_state->state = 1;
-            remember_max_stack_length(self, check_stack);
-            stop_check_step_if_it_is_time_to_stop(self, check_stack);
+            remember_max_stack_length(self);
+            stop_check_step_if_it_is_time_to_stop(self);
         } else {
-            popStack(check_stack);
+            popStack(self);
         }
         remember(self, x, y);
 
     } else if (full_state->state == 1) {
         // logT("full_state->state == 1\n");
-        insertElement(check_stack, allocate(x-1, y, 0), 1);
+        insertElement(self, allocate(x-1, y, 0));
         full_state->state = 2;
 
     } else if (full_state->state == 2) {
         // logT("full_state->state == 2\n");
-        insertElement(check_stack, allocate(x+1, y, 0), 1);
+        insertElement(self, allocate(x+1, y, 0));
         full_state->state = 3;
 
     } else if (full_state->state == 3) {
         // logT("full_state->state == 3\n");
-        insertElement(check_stack, allocate(x, y-1, 0), 1);
+        insertElement(self, allocate(x, y-1, 0));
         full_state->state = 4;
 
     } else if (full_state->state == 4) {
         // logT("full_state->state == 4\n");
-        popStack(check_stack);
-        insertElement(check_stack, allocate(x, y+1, 0), 1);
+        popStack(self);
+        insertElement(self, allocate(x, y+1, 0));
     }
 }
 
@@ -214,11 +212,18 @@ inline FloodFiller * newFloodFiller(
     filler->result = allocateBooleanLayer(9, 9);
     filler->equal = compare;
     filler->filter = filterPtr;
+
+    filler->stack = calloc(STACK_SIZE_ITEMS, sizeof(FloodFillerStackItem*));
+    filler->stack_head = -1; // No elements.
+
+    // Statistics counter.
     filler->max_stack_length = 1;
+
     return filler;
 }
 
 inline void destructFloodFiller(FloodFiller * filler) {
+    free(filler->stack);
     free(filler->selected_points);
     free(filler->result);
     free(filler);

@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Author: Georgy Ustinov
-// November 2017
+// Copyright (C) 2017 Georgy Ustinov
 
 #define RATIO_THRESHOLD 0.45
 #define MAX_WINDOW_SIZE 81
+#define STACK_SIZE_ITEMS 100
 
 #include "streams.h"
 #include "window_flood_fill_filter.h"
