@@ -24,19 +24,12 @@ typedef struct FloodFiller {
     bool * result;
     Filter * filter;
 
-    FloodFillerStackItem ** stack; // An array of pointers.
+    FloodFillerStackItem * stack;
     long stack_head;
 
     long max_stack_length;
 } FloodFiller;
 
-static inline FloodFillerStackItem * allocate(int x, int y, int state) {
-    FloodFillerStackItem * result = malloc(sizeof(FloodFillerStackItem));
-    result->x = x;
-    result->y = y;
-    result->state = state;
-    return result;
-}
 static inline long stackLength(FloodFiller * self) {
     return 1 + self->stack_head;
 }
@@ -75,7 +68,7 @@ typedef struct BoolMatrix {
 } BoolMatrix;
 
 static void check_step(FloodFiller * self);
-static void insertElement(FloodFiller * self, FloodFillerStackItem * item);
+static void insertElement(FloodFiller * self, int x, int y, int state);
 
 static BoolMatrix processFloodFiller(FloodFiller * self) {
 
@@ -83,7 +76,7 @@ static BoolMatrix processFloodFiller(FloodFiller * self) {
     int resultWidth = self->max_x - self->min_x + 1;
     
     // logT(" >>>> x y %d %d\n", self->startx, self->starty);
-    insertElement(self, allocate(self->startx, self->starty, 0));
+    insertElement(self, self->startx, self->starty, 0);
 
     int counter = 0;
     while (stackLength(self) > 0) {
@@ -113,13 +106,14 @@ static BoolMatrix processFloodFiller(FloodFiller * self) {
 }
 
 static void popStack(FloodFiller * self) {
-    FloodFillerStackItem * v = self->stack[self->stack_head];
-    free(v);
     self->stack_head--;
 }
-static void insertElement(FloodFiller * self, FloodFillerStackItem * item) {
+static void insertElement(FloodFiller * self, int x, int y, int state) {
     self->stack_head++;
-    self->stack[self->stack_head] = item;
+    FloodFillerStackItem * item = &(self->stack)[self->stack_head];
+    item->x = x;
+    item->y = y;
+    item->state = state;
 }
 
 static bool equals_to_start(FloodFiller * self, int x, int y) {
@@ -147,15 +141,12 @@ static void stop_check_step_if_it_is_time_to_stop(FloodFiller * self) {
     float resultRatio = (float)(result_count - 1) / (float)(MAX_WINDOW_SIZE - 1);
     if (resultRatio > RATIO_THRESHOLD) {
         // Stop.
-        for (int i = 0; i <= self->stack_head; i++) {
-            free(self->stack[i]);
-        }
         self->stack_head = -1;
     }
 }
 
 static void check_step(FloodFiller * self) {
-    FloodFillerStackItem * full_state = self->stack[self->stack_head];
+    FloodFillerStackItem * full_state = &(self->stack)[self->stack_head];
     int x = full_state->x;
     int y = full_state->y;
     int resultWidth = self->max_x - self->min_x + 1;
@@ -183,23 +174,23 @@ static void check_step(FloodFiller * self) {
 
     } else if (full_state->state == 1) {
         // logT("full_state->state == 1\n");
-        insertElement(self, allocate(x-1, y, 0));
+        insertElement(self, x-1, y, 0);
         full_state->state = 2;
 
     } else if (full_state->state == 2) {
         // logT("full_state->state == 2\n");
-        insertElement(self, allocate(x+1, y, 0));
+        insertElement(self, x+1, y, 0);
         full_state->state = 3;
 
     } else if (full_state->state == 3) {
         // logT("full_state->state == 3\n");
-        insertElement(self, allocate(x, y-1, 0));
+        insertElement(self, x, y-1, 0);
         full_state->state = 4;
 
     } else if (full_state->state == 4) {
         // logT("full_state->state == 4\n");
         popStack(self);
-        insertElement(self, allocate(x, y+1, 0));
+        insertElement(self, x, y+1, 0);
     }
 }
 
@@ -216,7 +207,7 @@ inline FloodFiller * newFloodFiller(
     filler->equal = compare;
     filler->filter = filterPtr;
 
-    filler->stack = calloc(STACK_SIZE_ITEMS, sizeof(FloodFillerStackItem*));
+    filler->stack = malloc(STACK_SIZE_ITEMS * sizeof(FloodFillerStackItem));
     filler->stack_head = -1; // No elements.
 
     // Statistics counter.

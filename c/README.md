@@ -26,7 +26,7 @@ STDIN image size: 454x206.
 Image 454x206 (3 channels).
 The maximum stack length is 38.
 STDIN image size: 454x206.
-2.899u 0.007s 0:02.90 99.6%     17+168k 10+1io 0pf+0w
+0.404u 0.007s 0:00.40 100.0%    28+171k 10+1io 0pf+0w
 ```
 
-131.4 / 2.9 ~= 45 times faster
+131.4 / 0.4 ~= 328.5 times faster
