@@ -34,9 +34,3 @@ Or to optimize the existing C implementation.
 I will likely merge a pull request with a working implementation written
 in any suitable programming language (Go/C/D/Nim/Haskell/Lisp/Cobol?).
 It just must be in a separate folder like the prototype does.
-
-# Dependencies
-
-C implementation:
-    
-* https://github.com/LorhanSohaky/Stack
