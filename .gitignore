@@ -1,6 +1,8 @@
 *.pyc
 __pycache__
 c/flood
+c/lineara
 c/flood.exe
 c/.codelite
 
+.idea
