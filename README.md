@@ -34,3 +34,9 @@ Or to optimize the existing C implementation.
 I will likely merge a pull request with a working implementation written
 in any suitable programming language (Go/C/D/Nim/Haskell/Lisp/Cobol?).
 It just must be in a separate folder like the prototype does.
+
+## Changelog
+
+2017-11-18 — Python prototype — 4m 51s
+
+2017-11-28 — C version — 1200 ms
