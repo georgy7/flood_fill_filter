@@ -14,6 +14,8 @@ class Xyz:
         self.w = yXYZ.shape[1]
 
     def expand(self, margin):
+        """Expand with inverted lightness border."""
+        invert = lambda array: -array + 1.0
         first_row = lambda array: array[:1]
         last_row = lambda array: array[-1:]
 
@@ -22,9 +24,9 @@ class Xyz:
 
         y = np.concatenate(
             (
-                np.repeat(first_row(self.yXYZ), margin, axis=0),
+                np.repeat(invert(first_row(self.yXYZ)), margin, axis=0),
                 self.yXYZ,
-                np.repeat(last_row(self.yXYZ), margin, axis=0)
+                np.repeat(invert(last_row(self.yXYZ)), margin, axis=0)
             ))
 
         x = np.concatenate(
@@ -43,9 +45,9 @@ class Xyz:
 
         y = np.concatenate(
             (
-                np.repeat(first_column(y), margin, axis=1),
+                np.repeat(invert(first_column(y)), margin, axis=1),
                 y,
-                np.repeat(last_column(y), margin, axis=1)
+                np.repeat(invert(last_column(y)), margin, axis=1)
             ),
             axis=1
         )

@@ -11,7 +11,7 @@ import xyz_loader
 
 KERNEL_MARGIN = 4
 KERNEL_DIAMETER = KERNEL_MARGIN + 1 + KERNEL_MARGIN
-RATIO_THRESHOLD = int(KERNEL_DIAMETER * KERNEL_DIAMETER * 0.45)
+RATIO_THRESHOLD = 0.45
 
 
 def read_linear(file):
@@ -24,45 +24,57 @@ def get_eq(s, y_offset, x_offset):
     return s[y_offset + KERNEL_MARGIN, x_offset + KERNEL_MARGIN]
 
 
-def recursive_step(a, filled, yx_tuple):
+def recursive_step(a, filled, yx_tuple, ratio_threshold):
     if not (yx_tuple in filled) \
-            and len(filled) <= RATIO_THRESHOLD \
+            and len(filled) <= ratio_threshold \
             and get_eq(a, yx_tuple[0], yx_tuple[1]) == True:
         filled.add(yx_tuple)
 
         if yx_tuple[0] > -KERNEL_MARGIN:
-            recursive_step(a, filled, (yx_tuple[0] - 1, yx_tuple[1]))
+            recursive_step(a, filled, (yx_tuple[0] - 1, yx_tuple[1]), ratio_threshold)
 
         if yx_tuple[0] < KERNEL_MARGIN:
-            recursive_step(a, filled, (yx_tuple[0] + 1, yx_tuple[1]))
+            recursive_step(a, filled, (yx_tuple[0] + 1, yx_tuple[1]), ratio_threshold)
 
         if yx_tuple[1] > -KERNEL_MARGIN:
-            recursive_step(a, filled, (yx_tuple[0], yx_tuple[1] - 1))
+            recursive_step(a, filled, (yx_tuple[0], yx_tuple[1] - 1), ratio_threshold)
 
         if yx_tuple[1] < KERNEL_MARGIN:
-            recursive_step(a, filled, (yx_tuple[0], yx_tuple[1] + 1))
+            recursive_step(a, filled, (yx_tuple[0], yx_tuple[1] + 1), ratio_threshold)
 
 
-def recursive_flood_fill(a):
+def recursive_flood_fill(a, ratio_threshold):
     filled_points = set()
-    recursive_step(a, filled_points, (-1, 0))
-    recursive_step(a, filled_points, (1, 0))
-    recursive_step(a, filled_points, (0, -1))
-    recursive_step(a, filled_points, (0, 1))
+    recursive_step(a, filled_points, (-1, 0), ratio_threshold)
+    recursive_step(a, filled_points, (1, 0), ratio_threshold)
+    recursive_step(a, filled_points, (0, -1), ratio_threshold)
+    recursive_step(a, filled_points, (0, 1), ratio_threshold)
     return len(filled_points)
+
+
+def window_square(left_border, right_border, top_border, bottom_border):
+    return (1 + right_border - left_border) * (1 + bottom_border - top_border)
 
 
 def main(rgba, y_threshold):
     original_image = xyz_loader.from_rgba(rgba)
     equality_matrices = calculations.equality_matrices(original_image, KERNEL_MARGIN, y_threshold)
 
-    flood_fill_sum = np.zeros((original_image.h, original_image.w), dtype=np.short)
+    flood_fill_result = np.zeros((original_image.h, original_image.w), dtype=np.bool)
 
     for y in range(equality_matrices.shape[0]):
         for x in range(equality_matrices.shape[1]):
-            flood_fill_sum[y, x] = recursive_flood_fill(equality_matrices[y, x])
+            l = max(0, x - KERNEL_MARGIN)
+            t = max(0, y - KERNEL_MARGIN)
+            r = min(original_image.w - 1, x + KERNEL_MARGIN)
+            b = min(original_image.h - 1, y + KERNEL_MARGIN)
 
-    return flood_fill_sum > RATIO_THRESHOLD
+            square = window_square(l, r, t, b) - 1
+            count_threshold = int(square * RATIO_THRESHOLD)
+
+            flood_fill_result[y, x] = recursive_flood_fill(equality_matrices[y, x], count_threshold) > count_threshold
+
+    return flood_fill_result
 
 
 # TODO удалить позже
