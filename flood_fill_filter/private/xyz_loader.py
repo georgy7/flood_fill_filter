@@ -1,6 +1,6 @@
 import numpy as np
 
-import xyz
+from flood_fill_filter.private.xyz import Xyz
 
 
 def white_lowering_function(luma):
@@ -30,4 +30,4 @@ def from_rgba(rgba):
     yGamma = yXYZ ** (1 / 2.2)
     yGammaLowWhite = v_white_lowering_function(yGamma)
 
-    return xyz.Xyz(yGammaLowWhite, xXYZ, zXYZ)
+    return Xyz(yGammaLowWhite, xXYZ, zXYZ)

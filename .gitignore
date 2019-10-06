@@ -6,3 +6,7 @@ c/flood.exe
 c/.codelite
 
 .idea
+
+build
+dist
+*.egg-info

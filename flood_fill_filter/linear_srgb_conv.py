@@ -1,5 +1,10 @@
 import numpy as np
 
+__all__ = (
+    'to_linear',
+    'from_linear'
+)
+
 
 def srgb_to_linear(cb):
     c = cb / 255.0

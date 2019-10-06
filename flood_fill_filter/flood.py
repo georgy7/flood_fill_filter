@@ -1,23 +1,26 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import numpy as np
-import sys
 from PIL import Image
 
-import calculations
-import linear_srgb_conv
-import xyz_loader
+import flood_fill_filter.private.calculations as calculations
+import flood_fill_filter.private.xyz_loader as xyz_loader
+from flood_fill_filter.linear_srgb_conv import *
 
 KERNEL_MARGIN = 4
 KERNEL_DIAMETER = KERNEL_MARGIN + 1 + KERNEL_MARGIN
 RATIO_THRESHOLD = 0.45
 
+__all__ = (
+    'read_linear',
+    'filter',
+    'to_8_bit',
+    'save'
+)
+
 
 def read_linear(file):
     im = Image.open(file).convert('RGBA')
     im = np.array(im, dtype=np.float32)
-    return linear_srgb_conv.to_linear(im[:, :, 0], im[:, :, 1], im[:, :, 2], im[:, :, 3])
+    return to_linear(im[:, :, 0], im[:, :, 1], im[:, :, 2], im[:, :, 3])
 
 
 def get_eq(s, y_offset, x_offset):
@@ -56,7 +59,7 @@ def window_square(left_border, right_border, top_border, bottom_border):
     return (1 + right_border - left_border) * (1 + bottom_border - top_border)
 
 
-def main(rgba, y_threshold):
+def filter(rgba, y_threshold):
     original_image = xyz_loader.from_rgba(rgba)
     equality_matrices = calculations.equality_matrices(original_image, KERNEL_MARGIN, y_threshold)
 
@@ -77,24 +80,10 @@ def main(rgba, y_threshold):
     return flood_fill_result
 
 
-# TODO удалить позже
 def to_8_bit(a):
     return np.clip(a, 0, 255).astype(np.uint8)
 
 
-# TODO удалить позже
-def show(grayscale_numpy_image, scale=1):
+def save(grayscale_numpy_image, filename):
     img = Image.fromarray(grayscale_numpy_image, 'L')
-
-    if (scale > 1):
-        new_size = (img.size[0] * scale, img.size[1] * scale)
-        img = img.resize(new_size, Image.NEAREST)
-
-    img.show()
-
-
-if __name__ == "__main__":
-    y_threshold = 0.1
-    input = read_linear(sys.argv[1])
-    result = main(input, y_threshold)
-    show(to_8_bit(result * 255))
+    img.save(filename)
