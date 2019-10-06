@@ -5,11 +5,13 @@ Flood Fill Filter
 
 JPEG-noise-resistant edge detection algorithm.
 
-## Usage
+Usage
+-----
 
     flood_fill_filter input.jpg output.png
 
-## Changelog
+Changelog
+---------
 
 2017-11-18 — Python prototype — 4m 51s
 
