@@ -7,9 +7,8 @@ import flood_fill_filter.flood as flood
 
 
 def main():
-    y_threshold = 0.1
     input = flood.read_linear(sys.argv[1])
-    result = flood.filter(input, y_threshold)
+    result = flood.filter(input)
 
     flood.save(
         flood.to_8_bit(result * 255),

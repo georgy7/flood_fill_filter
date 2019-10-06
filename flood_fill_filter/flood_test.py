@@ -7,7 +7,6 @@ import flood_fill_filter.flood as flood
 
 
 class TestSamples(unittest.TestCase):
-    y_threshold = 0.1
 
     sample_dir = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir), 'samples')
     input_list = sorted([f for f in os.listdir(sample_dir) if f.endswith('_orig.jpg') or f.endswith('_orig.png')])
@@ -17,7 +16,7 @@ class TestSamples(unittest.TestCase):
 
     for i, input_image in enumerate(input_list):
         input = flood.read_linear(os.path.join(sample_dir, input_image))
-        ouput = flood.filter(input, y_threshold)
+        ouput = flood.filter(input)
 
         expected_output = np.array(Image.open(os.path.join(sample_dir, output_list[i])).convert('L')) > 128
         diff_count = np.sum(np.logical_xor(ouput, expected_output))
