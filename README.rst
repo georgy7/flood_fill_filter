@@ -1,7 +1,7 @@
 Flood Fill Filter
 =================
 
- | |Build Status|
+ | |Build Status| |PyPI|
 
 JPEG-noise-resistant edge detection algorithm.
 
@@ -21,3 +21,5 @@ Changelog
 
 .. |Build Status| image:: https://travis-ci.org/georgy7/flood_fill_filter.svg?branch=master
    :target: https://travis-ci.org/georgy7/flood_fill_filter
+.. |PyPI| image:: https://img.shields.io/pypi/v/flood-fill-filter.svg
+   :target: https://pypi.org/project/flood-fill-filter/
