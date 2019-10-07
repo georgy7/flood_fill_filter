@@ -8,9 +8,10 @@ import flood_fill_filter.flood as flood
 
 USAGE_EPILOG = '''Example:
 
-    flood_fill_filter input.jpg output.pcx
-    flood_fill_filter -r 5 input.jpg output.pcx
-    flood_fill_filter -d 0.05 input.jpg output.pcx
+    flood_fill_filter input.jpg output.png
+    flood_fill_filter -r 5 input.jpg output.png
+    flood_fill_filter -d 0.05 input.jpg output.png
+    flood_fill_filter -r 13 -a 0.05 input.jpg output.pcx
 
 It is recommended to leave the optional parameters at their default values.
 '''
@@ -29,6 +30,16 @@ def float_from_0_to_1_exclusive(arg):
 
     return f
 
+def radius_type(arg):
+    try:
+        i = int(arg)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(str(e))
+
+    if i < 1:
+        raise argparse.ArgumentTypeError("Must be greater than or equal 1.")
+
+    return i
 
 def main():
     parser = argparse.ArgumentParser(
@@ -44,7 +55,7 @@ def main():
                         help='The fraction of filled pixels within the fill window needed '
                              'for the white pixel in the output. Default: 0.45.')
 
-    parser.add_argument('-r', '--radius', type=int, default=4, choices=range(1, 10),
+    parser.add_argument('-r', '--radius', type=radius_type, default=4,
                         help='The fill window margin. The window width equals 2r+1. Default: 4.')
 
     parser.add_argument('input')
