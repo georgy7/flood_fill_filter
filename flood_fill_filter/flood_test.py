@@ -18,11 +18,13 @@ class TestSamples(unittest.TestCase):
         input = flood.read_linear(os.path.join(sample_dir, input_image))
         ouput = flood.filter(input)
 
-        expected_output = np.array(Image.open(os.path.join(sample_dir, output_list[i])).convert('L')) > 128
+        expected_output_filename = output_list[i]
+        expected_output = np.array(Image.open(os.path.join(sample_dir, expected_output_filename)).convert('L')) > 128
         diff_count = np.sum(np.logical_xor(ouput, expected_output))
 
         diff_list.append({
             'file': input_image,
+            'output_file': expected_output_filename,
             'shape': input.shape,
             'diff_count': diff_count
         })
@@ -31,8 +33,9 @@ class TestSamples(unittest.TestCase):
         for image in self.diff_list:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
             assert diff_per_cent < (100 - 90), \
-                '{} has {} different pixels ({}%)'.format(
+                '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
+                    image['output_file'],
                     image['diff_count'],
                     diff_per_cent
                 )
@@ -41,8 +44,9 @@ class TestSamples(unittest.TestCase):
         for image in self.diff_list:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
             assert diff_per_cent < (100 - 99), \
-                '{} has {} different pixels ({}%)'.format(
+                '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
+                    image['output_file'],
                     image['diff_count'],
                     diff_per_cent
                 )
@@ -51,8 +55,9 @@ class TestSamples(unittest.TestCase):
         for image in self.diff_list:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
             assert diff_per_cent < (100 - 99.9), \
-                '{} has {} different pixels ({}%)'.format(
+                '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
+                    image['output_file'],
                     image['diff_count'],
                     diff_per_cent
                 )
@@ -61,8 +66,9 @@ class TestSamples(unittest.TestCase):
         for image in self.diff_list:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
             assert diff_per_cent < (100 - 99.9615), \
-                '{} has {} different pixels ({}%)'.format(
+                '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
+                    image['output_file'],
                     image['diff_count'],
                     diff_per_cent
                 )
