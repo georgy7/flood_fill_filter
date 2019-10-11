@@ -35,6 +35,150 @@ class TestSamples(unittest.TestCase):
     samples = load_folder('samples')
     samples2 = load_folder('samples2')
 
+    def test_fill_center(self):
+        filled_matrix = np.zeros((5, 5), dtype=np.bool)
+        flood.fill(filled_matrix, 0, 0, 0, 2)
+
+        assert 5 == 2 + 1 + 2
+
+        expected_result = np.array([
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, True, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False]
+        ], dtype=np.bool)
+
+        assert np.array_equal(expected_result, filled_matrix), \
+            filled_matrix
+
+    def test_fill_center_to_right(self):
+        filled_matrix = np.zeros((5, 5), dtype=np.bool)
+        flood.fill(filled_matrix, 0, 0, 2, 2)
+
+        assert 5 == 2 + 1 + 2
+
+        expected_result = np.array([
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, True, True, True],
+            [False, False, False, False, False],
+            [False, False, False, False, False]
+        ], dtype=np.bool)
+
+        assert np.array_equal(expected_result, filled_matrix), \
+            filled_matrix
+
+    def test_fill_center_to_left(self):
+        filled_matrix = np.zeros((5, 5), dtype=np.bool)
+        flood.fill(filled_matrix, 0, -2, 0, 2)
+
+        assert 5 == 2 + 1 + 2
+
+        expected_result = np.array([
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [True, True, True, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False]
+        ], dtype=np.bool)
+
+        assert np.array_equal(expected_result, filled_matrix), \
+            filled_matrix
+
+    def test_fill_top_row(self):
+        filled_matrix = np.zeros((5, 5), dtype=np.bool)
+        flood.fill(filled_matrix, -2, -2, 2, 2)
+
+        assert 5 == 2 + 1 + 2
+
+        expected_result = np.array([
+            [True, True, True, True, True],
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False]
+        ], dtype=np.bool)
+
+        assert np.array_equal(expected_result, filled_matrix), \
+            filled_matrix
+
+    def test_fill_bottom_row(self):
+        filled_matrix = np.zeros((5, 5), dtype=np.bool)
+        flood.fill(filled_matrix, 2, -2, 2, 2)
+
+        assert 5 == 2 + 1 + 2
+
+        expected_result = np.array([
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [True, True, True, True, True]
+        ], dtype=np.bool)
+
+        assert np.array_equal(expected_result, filled_matrix), \
+            filled_matrix
+
+    def test_center_filled(self):
+        matrix = np.array([
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, True, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False]
+        ], dtype=np.bool)
+
+        assert flood.filled(matrix, 0, 0, 2)
+        assert not flood.filled(matrix, -1, 0, 2)
+        assert not flood.filled(matrix, 1, 0, 2)
+        assert not flood.filled(matrix, 0, -1, 2)
+        assert not flood.filled(matrix, 0, 1, 2)
+
+    def test_left_filled(self):
+        matrix = np.array([
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [True, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False]
+        ], dtype=np.bool)
+
+        assert flood.filled(matrix, 0, -2, 2)
+
+    def test_right_filled(self):
+        matrix = np.array([
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, True],
+            [False, False, False, False, False],
+            [False, False, False, False, False]
+        ], dtype=np.bool)
+
+        assert flood.filled(matrix, 0, 2, 2)
+
+    def test_top_filled(self):
+        matrix = np.array([
+            [False, False, True, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False]
+        ], dtype=np.bool)
+
+        assert flood.filled(matrix, -2, 0, 2)
+
+    def test_bottom_filled(self):
+        matrix = np.array([
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, False, False, False],
+            [False, False, True, False, False]
+        ], dtype=np.bool)
+
+        assert flood.filled(matrix, 2, 0, 2)
+
     def test_90(self):
         for image in self.samples:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100

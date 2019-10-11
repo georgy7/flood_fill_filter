@@ -19,6 +19,8 @@ Changelog
 
 2018-10-07 — New Python implementation — 18s
 
+2018-10-12 — Recursive filling using horizontal lines — 16s
+
 .. |Build Status| image:: https://travis-ci.org/georgy7/flood_fill_filter.svg?branch=master
    :target: https://travis-ci.org/georgy7/flood_fill_filter
 .. |PyPI| image:: https://img.shields.io/pypi/v/flood-fill-filter.svg

@@ -23,32 +23,57 @@ def get_eq(s, y_offset, x_offset, kernel_margin):
     return s[y_offset + kernel_margin, x_offset + kernel_margin]
 
 
-def recursive_step(a, filled, yx_tuple, ratio_threshold, kernel_margin):
-    if not (yx_tuple in filled) \
-            and len(filled) <= ratio_threshold \
-            and get_eq(a, yx_tuple[0], yx_tuple[1], kernel_margin) == True:
-        filled.add(yx_tuple)
+def filled(filled_matrix, y_offset, x_offset, kernel_margin):
+    return filled_matrix[
+        (y_offset + kernel_margin),
+        (x_offset + kernel_margin)
+    ]
 
-        if yx_tuple[0] > -kernel_margin:
-            recursive_step(a, filled, (yx_tuple[0] - 1, yx_tuple[1]), ratio_threshold, kernel_margin)
 
-        if yx_tuple[0] < kernel_margin:
-            recursive_step(a, filled, (yx_tuple[0] + 1, yx_tuple[1]), ratio_threshold, kernel_margin)
+def fill(filled_matrix, y_offset, left_x_offset_inclusive, right_x_offset_inclusive, kernel_margin):
+    filled_matrix[
+    y_offset + kernel_margin,
+    (left_x_offset_inclusive + kernel_margin):(right_x_offset_inclusive + kernel_margin + 1)
+    ] = True
 
-        if yx_tuple[1] > -kernel_margin:
-            recursive_step(a, filled, (yx_tuple[0], yx_tuple[1] - 1), ratio_threshold, kernel_margin)
 
-        if yx_tuple[1] < kernel_margin:
-            recursive_step(a, filled, (yx_tuple[0], yx_tuple[1] + 1), ratio_threshold, kernel_margin)
+def recursive_step(a, filled_matrix, yx_tuple, ratio_threshold, kernel_margin):
+    y = yx_tuple[0]
+    initial_x = yx_tuple[1]
+
+    left_border_inclusive = initial_x
+    right_border_inclusive = initial_x
+
+    for x in range(initial_x - 1, -kernel_margin - 1, -1):
+        if get_eq(a, y, x, kernel_margin):
+            left_border_inclusive = x
+        else:
+            break
+
+    for x in range(initial_x + 1, kernel_margin + 1, 1):
+        if get_eq(a, y, x, kernel_margin):
+            right_border_inclusive = x
+        else:
+            break
+
+    fill(filled_matrix, y, left_border_inclusive, right_border_inclusive, kernel_margin)
+
+    if y > -kernel_margin:
+        for x in range(left_border_inclusive, right_border_inclusive + 1):
+            if not filled(filled_matrix, y - 1, x, kernel_margin) and get_eq(a, y - 1, x, kernel_margin):
+                recursive_step(a, filled_matrix, (y - 1, x), ratio_threshold, kernel_margin)
+
+    if y < kernel_margin:
+        for x in range(left_border_inclusive, right_border_inclusive + 1):
+            if not filled(filled_matrix, y + 1, x, kernel_margin) and get_eq(a, y + 1, x, kernel_margin):
+                recursive_step(a, filled_matrix, (y + 1, x), ratio_threshold, kernel_margin)
 
 
 def recursive_flood_fill(a, ratio_threshold, kernel_margin):
-    filled_points = set()
-    recursive_step(a, filled_points, (-1, 0), ratio_threshold, kernel_margin)
-    recursive_step(a, filled_points, (1, 0), ratio_threshold, kernel_margin)
-    recursive_step(a, filled_points, (0, -1), ratio_threshold, kernel_margin)
-    recursive_step(a, filled_points, (0, 1), ratio_threshold, kernel_margin)
-    return len(filled_points)
+    kernel_diameter = kernel_margin + 1 + kernel_margin
+    filled_points = np.zeros((kernel_diameter, kernel_diameter), dtype=np.bool)
+    recursive_step(a, filled_points, (0, 0), ratio_threshold, kernel_margin)
+    return np.sum(filled_points) - 1
 
 
 def window_square(left_border, right_border, top_border, bottom_border):
@@ -71,7 +96,8 @@ def filter(rgba, y_threshold=0.1, kernel_margin=4, ratio_threshold=0.45):
             square = window_square(l, r, t, b) - 1
             count_threshold = int(square * ratio_threshold)
 
-            flood_fill_result[y, x] = recursive_flood_fill(equality_matrices[y, x], count_threshold, kernel_margin) > count_threshold
+            flood_fill_result[y, x] = recursive_flood_fill(equality_matrices[y, x], count_threshold,
+                                                           kernel_margin) > count_threshold
 
     return flood_fill_result
 
