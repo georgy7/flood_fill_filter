@@ -1,5 +1,7 @@
 import numpy as np
+import os
 from PIL import Image
+from multiprocessing import Pool
 
 import flood_fill_filter.private.calculations as calculations
 import flood_fill_filter.private.xyz_loader as xyz_loader
@@ -80,24 +82,57 @@ def window_square(left_border, right_border, top_border, bottom_border):
     return (1 + right_border - left_border) * (1 + bottom_border - top_border)
 
 
+def filter_row(input):
+    equality_matrices_row, h, w, y, kernel_margin, ratio_threshold = input
+
+    t = max(0, y - kernel_margin)
+    b = min(h - 1, y + kernel_margin)
+
+    row_result = np.zeros((w), dtype=np.bool)
+
+    for x in range(w):
+        l = max(0, x - kernel_margin)
+        r = min(w - 1, x + kernel_margin)
+
+        square = window_square(l, r, t, b) - 1
+        count_threshold = int(square * ratio_threshold)
+
+        row_result[x] = recursive_flood_fill(
+            equality_matrices_row[x], count_threshold, kernel_margin
+        ) > count_threshold
+
+    return {
+        'y': y,
+        'array': row_result
+    }
+
+
 def filter(rgba, y_threshold=0.1, kernel_margin=4, ratio_threshold=0.45):
     original_image = xyz_loader.from_rgba(rgba)
     equality_matrices = calculations.equality_matrices(original_image, kernel_margin, y_threshold)
 
     flood_fill_result = np.zeros((original_image.h, original_image.w), dtype=np.bool)
 
-    for y in range(equality_matrices.shape[0]):
-        for x in range(equality_matrices.shape[1]):
-            l = max(0, x - kernel_margin)
-            t = max(0, y - kernel_margin)
-            r = min(original_image.w - 1, x + kernel_margin)
-            b = min(original_image.h - 1, y + kernel_margin)
+    h, w = original_image.h, original_image.w
 
-            square = window_square(l, r, t, b) - 1
-            count_threshold = int(square * ratio_threshold)
+    input_rows = [
+        (
+            equality_matrices[y, :].copy(),
+            h, w,
+            y, kernel_margin, ratio_threshold
+        )
+        for y in range(h)
+    ]
 
-            flood_fill_result[y, x] = recursive_flood_fill(equality_matrices[y, x], count_threshold,
-                                                           kernel_margin) > count_threshold
+    worker_count = os.cpu_count()
+    if worker_count >= 4:
+        worker_count = round(worker_count / 2)
+
+    pool = Pool(worker_count)
+    filled_rows = pool.map(filter_row, input_rows)
+
+    for filled_row in filled_rows:
+        flood_fill_result[filled_row['y'], :] = filled_row['array']
 
     return flood_fill_result
 
