@@ -22,6 +22,57 @@ Flood Fill Filter
 Я предлагаю фильтр на базе операции заливки внутри локального окна с заданным радиусом.
 
 
+Установка
+---------
+
+.. code-block:: bash
+
+    pip install flood-fill-filter
+
+    # Или в общую директорию:
+    sudo python3 -m pip install --prefix /usr/local flood-fill-filter
+
+
+Использование
+-------------
+
+Из командной строки:
+
+.. code-block:: bash
+
+    flood_fill_filter input.jpg output.png
+
+Из кода:
+
+.. code-block:: python
+
+    import flood_fill_filter.flood as flood
+
+    input = flood.read_linear(filename)
+    result = flood.filter(input)            # Двумерный NumPy массив.
+
+    flood.save(
+        flood.to_8_bit(result * 255),
+        output_filename
+    )
+
+Технические детали
+------------------
+
+Изображение переводится в цветовое пространство CIE XYZ.
+
+Делается гамма-коррекция на яркостной компоненте Y.
+
+Яркость выше 0,7 корректируется таким образом, что белый цвет становится равен 0,75.
+
+Разница в цветоразностных компонентах X и Z учитывается в 4 раза слабее, чем яркость.
+При яркости выше 0,5, значимость X и Z падает еще в два раза.
+У пикселей, близких к черному цвету, компоненты X и Z игнорируются.
+
+Заливка из каждого пикселя производится по четырём направлениям: по горизонтали и по вертикали, но не по диагонали.
+
+Пиксели с процессе заливки сравниваются с точкой начала заливки, а не со смежными пикселями.
+
 .. |Build Status| image:: https://travis-ci.org/georgy7/flood_fill_filter.svg?branch=master
    :target: https://travis-ci.org/georgy7/flood_fill_filter
 .. |PyPI| image:: https://img.shields.io/pypi/v/flood-fill-filter.svg
