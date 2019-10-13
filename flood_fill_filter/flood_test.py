@@ -15,7 +15,7 @@ def load_folder(folder_name):
 
     for i, input_image in enumerate(input_list):
         input = flood.read_linear(os.path.join(directory, input_image))
-        ouput = flood.filter(input)
+        ouput = flood.filter(input, y_threshold=0.092)
 
         expected_output_filename = output_list[i]
         expected_output = np.array(Image.open(os.path.join(directory, expected_output_filename)).convert('L')) > 128

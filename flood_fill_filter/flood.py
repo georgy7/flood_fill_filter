@@ -107,7 +107,7 @@ def filter_row(input):
     }
 
 
-def filter(linear_rgba, y_threshold=0.092, kernel_margin=4, ratio_threshold=0.45):
+def filter(linear_rgba, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.45):
     original_image = xyz_loader.from_rgba(linear_rgba)
     equality_matrices = calculations.equality_matrices(original_image, kernel_margin, y_threshold)
 

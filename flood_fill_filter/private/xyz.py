@@ -104,14 +104,14 @@ class Xyz:
         return Xyz(self.yXYZ[n:, :], self.xXYZ[n:, :], self.zXYZ[n:, :])
 
     def eq(self, other, y_threshold):
-        CHROMA_FACTOR = 0.25
+        chroma_threshold_factor = 4
 
         y_equal = np.abs(other.yXYZ - self.yXYZ) < y_threshold
 
         xd = np.abs(other.xXYZ - self.xXYZ)
         zd = np.abs(other.zXYZ - self.zXYZ)
 
-        tf = y_threshold / CHROMA_FACTOR
+        tf = y_threshold * chroma_threshold_factor
 
         return np.logical_and(
             y_equal,
@@ -121,9 +121,9 @@ class Xyz:
                     np.logical_and(
                         np.logical_and(
                             np.logical_or(self.yXYZ > 0.5, other.yXYZ > 0.5),
-                            xd < tf / 0.5
+                            xd < tf * 2
                         ),
-                        zd < tf / 0.5
+                        zd < tf * 2
                     ),
                     np.logical_and(
                         xd < tf,
