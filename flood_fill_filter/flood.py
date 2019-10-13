@@ -107,8 +107,8 @@ def filter_row(input):
     }
 
 
-def filter(rgba, y_threshold=0.1, kernel_margin=4, ratio_threshold=0.45):
-    original_image = xyz_loader.from_rgba(rgba)
+def filter(linear_rgba, y_threshold=0.092, kernel_margin=4, ratio_threshold=0.45):
+    original_image = xyz_loader.from_rgba(linear_rgba)
     equality_matrices = calculations.equality_matrices(original_image, kernel_margin, y_threshold)
 
     flood_fill_result = np.zeros((original_image.h, original_image.w), dtype=np.bool)

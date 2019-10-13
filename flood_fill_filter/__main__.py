@@ -48,7 +48,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
-    parser.add_argument('-d', '--diff', type=float_from_0_to_1_exclusive, default=0.1,
+    parser.add_argument('-d', '--diff', type=float_from_0_to_1_exclusive, default=0.092,
                         help='Y (CIE XYZ) sensitivity. Default: 0.1.')
 
     parser.add_argument('-a', '--activation-threshold', type=float_from_0_to_1_exclusive, default=0.45,

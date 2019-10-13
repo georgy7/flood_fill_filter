@@ -116,16 +116,19 @@ class Xyz:
         return np.logical_and(
             y_equal,
             np.logical_or(
-                np.logical_and(
+                np.logical_or(self.yXYZ <= (25 / 255), other.yXYZ <= (25 / 255)),
+                np.logical_or(
                     np.logical_and(
-                        np.logical_or(self.yXYZ > 0.5, other.yXYZ > 0.5),
-                        xd < tf / 0.5
+                        np.logical_and(
+                            np.logical_or(self.yXYZ > 0.5, other.yXYZ > 0.5),
+                            xd < tf / 0.5
+                        ),
+                        zd < tf / 0.5
                     ),
-                    zd < tf / 0.5
-                ),
-                np.logical_and(
-                    xd < tf,
-                    zd < tf
+                    np.logical_and(
+                        xd < tf,
+                        zd < tf
+                    )
                 )
             )
         )

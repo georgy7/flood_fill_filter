@@ -18,11 +18,15 @@ def float_to_byte(a):
     return np.fmax(np.fmin(np.rint(255.0 * a), 255.0), 0.0)
 
 
-def linear_to_srgb(lin):
+def linear_to_srgb_gamma_correction(lin):
     a = 0.055
-    array_if = float_to_byte(lin * 12.92)
-    array_else = float_to_byte(np.power(lin, 1.0 / 2.4) * (1 + a) - a)
+    array_if = lin * 12.92
+    array_else = np.power(lin, 1.0 / 2.4) * (1 + a) - a
     return np.where(lin <= 0.0031308, array_if, array_else)
+
+
+def linear_to_srgb(lin):
+    return float_to_byte(linear_to_srgb_gamma_correction(lin))
 
 
 def to_linear(r, g, b, a):
