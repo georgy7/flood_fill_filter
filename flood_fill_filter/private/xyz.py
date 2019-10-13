@@ -113,28 +113,19 @@ class Xyz:
 
         tf = y_threshold / CHROMA_FACTOR
 
-        return np.logical_or(
-            np.logical_and(
-                y_equal,
-                np.logical_or(self.yXYZ > 0.9, other.yXYZ > 0.9)
-            ),
+        return np.logical_and(
+            y_equal,
             np.logical_or(
                 np.logical_and(
-                    y_equal,
                     np.logical_and(
-                        np.logical_and(
-                            np.logical_or(self.yXYZ > 0.5, other.yXYZ > 0.5),
-                            xd < tf / 0.5
-                        ),
-                        zd < tf / 0.5
-                    )
+                        np.logical_or(self.yXYZ > 0.5, other.yXYZ > 0.5),
+                        xd < tf / 0.5
+                    ),
+                    zd < tf / 0.5
                 ),
                 np.logical_and(
-                    y_equal,
-                    np.logical_and(
-                        xd < tf,
-                        zd < tf
-                    )
+                    xd < tf,
+                    zd < tf
                 )
             )
         )
