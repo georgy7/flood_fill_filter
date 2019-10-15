@@ -7,7 +7,9 @@ Flood Fill Filter
 
  | |Build Status| |PyPI|
 
-JPEG-noise-resistant edge detection algorithm.
+.. note::
+
+    TODO
 
 Usage
 -----
