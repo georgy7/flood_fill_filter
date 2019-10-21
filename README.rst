@@ -11,13 +11,13 @@ Flood Fill Filter
 Summary
 -------
 
-The goal is to separate high-density information areas from monochromatic areas and gradients.
-At the same time, JPEG noises with low intensity dispersion should be perceived
-as part of these monochromatic areas and gradients.
+The goal is to separate high-density information areas from single-color areas and gradients.
+At the same time, JPEG noises with low luminance dispersion should be perceived
+as part of these single-color areas and gradients.
 
-I propose a filter based on a flood fill operation in a local square window with a given width.
+I propose a filter based on flood fill operation in a local square window with a given width.
 
-The result is a bit like raster methods for boundary finding: Sobel, Prewitt, Laplace, Canny operators,
+The result is a bit like raster methods for edge detection: Sobel, Prewitt, Laplace, Canny operators,
 but the meaning is different. Let’s give an example.
 
 |readme_xm|
@@ -27,7 +27,7 @@ In this picture, I inverted the intensity; it shows white contours in the origin
 
 |readme_Prewitt_inverted|
 
-Basically there is nothing to prevent selecting a threshold value, such that there were only contours
+Basically, there is nothing to prevent selecting a threshold value, such that there were only contours
 without noise. Then there will be a white space between the close lines.
 
 |readme_Prewitt_inverted_contrast|
@@ -37,14 +37,14 @@ And the Flood Fill Filter shows the following. The default activation level is 0
 |readme_fff|
 
 It paints with black all areas where it is impossible to fill 45% of the 9x9 window around the pixel.
-It highlights the noises as well, but most interesting is next. Let us apply the Flood Fill Filter
-to the result of the Flood Fill Filter itself, but with an activation level of 0.05 this time.
+It highlights the noises as well, but most interesting is the following. Let us apply the Flood Fill Filter
+to the result of the Flood Fill Filter itself, except with an activation level of 0.05 this time.
 This operation will result in the free-standing points detected in the first step.
 
 |readme_fff_fffa005|
 
 Then we exclude all black pixels of the second picture from black pixels of the first picture and
-obtain the picture which is the solution of a problem as I understand it.
+obtain the picture which is the solution to the problem as I understand it.
 This result can be obtained with a single command by adding the :code:`--denoise` parameter.
 
 |readme_fff_denoise|
@@ -63,8 +63,8 @@ already exists.*
 Limitations of the method
 -------------------------
 
-1. It will not work automatically, if the contrast is increased greatly after JPEG compression.
-In this case, the diff parameter should be selected manually (it is :code:`0.08` by default)
+1. It will not work automatically if the contrast is increased significantly after JPEG compression.
+In this case, the :code:`--diff` parameter should be selected manually (it is :code:`0.08` by default)
 
 2. The filter requires hundreds of times more computing resources than the Prewitt operator
 and the most other convolution-based filters.
@@ -112,7 +112,7 @@ Technical details
 
 First, the image is translated to the CIE XYZ color space.
 
-Gamma correction is applied for the intensity component Y.
+Gamma correction is applied for the luminance component Y.
 Let's call the corrected value Yγ.
 
 Yγ above 0.7 is corrected so that the white color becomes equal to 0.75.
@@ -125,19 +125,19 @@ Let's call the resulting value L.
     L = Yγ, Yγ ⩽ 0.7
 
 The :code:`--diff` parameter determines the minimum difference between L₁ и L₂,
-at which we stop considering the intensity to be the same.
+at which we stop considering the luminance to be the same.
 That is, with the standard settings, light gray 0.7 and white are considered the same color.
 
 This is a hack that allows ignoring white halos around objects.
 They can appear in the photo initially or after the Unsharp Mask filter.
 
-The difference of the color difference components X and Z is taken into account 4 times weaker
-than the intensity. This means that at the same intensity, we consider the colors to be the same
+The differences of the chromaticity components X and Z are taken into account 4 times weaker
+than the luminance. This means that at the same luminance, we consider the colors to be the same
 only if both X and Z components differ by less than :code:`4 * diff`.
 
-When intensity is above 0.5, the X and Z sensitivity threshold expands to :code:`8 * diff`.
+When luminance is above 0.5, the X and Z sensitivity threshold expands to :code:`8 * diff`.
 
-In pixels close to black, the X and Z components are ignored — that is, at the same intensity,
+In pixels close to black, the X and Z components are ignored — that is, at the same luminance,
 we consider the colors to be the same.
 
 Each pixel is filled in four directions: horizontally and vertically, but not diagonally.
