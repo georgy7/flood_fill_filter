@@ -15,7 +15,7 @@ The goal is to separate high-density information areas from single-color areas a
 At the same time, JPEG noises with low luminance dispersion should be perceived
 as part of these single-color areas and gradients.
 
-I propose a filter based on flood fill operation in a local square window with a given width.
+I propose a filter based on Flood Fill operation in a local square window with a given width.
 
 The result is a bit like raster methods for edge detection: Sobel, Prewitt, Laplace, Canny operators,
 but the meaning is different. Let’s give an example.
