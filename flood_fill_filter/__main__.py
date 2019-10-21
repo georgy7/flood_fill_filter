@@ -12,6 +12,7 @@ USAGE_EPILOG = '''Example:
     flood_fill_filter -r 5 input.jpg output.png
     flood_fill_filter -d 0.05 input.jpg output.png
     flood_fill_filter -r 13 -a 0.05 input.jpg output.pcx
+    flood_fill_filter --denoise input.jpg output.png
 
 It is recommended to leave the optional parameters at their default values.
 '''
@@ -58,6 +59,9 @@ def main():
     parser.add_argument('-r', '--radius', type=radius_type, default=4,
                         help='The fill window margin. The window width equals 2r+1. Default: 4.')
 
+    parser.add_argument('--denoise', action='store_true',
+                        help='Remove free-standing points.')
+
     parser.add_argument('input')
     parser.add_argument('output')
 
@@ -65,6 +69,7 @@ def main():
 
     input = flood.read_linear(namespace.input)
     result = flood.filter(input,
+                          denoise=namespace.denoise,
                           y_threshold=namespace.diff,
                           kernel_margin=namespace.radius,
                           ratio_threshold=namespace.activation_threshold)

@@ -1,10 +1,12 @@
-import numpy as np
 import os
-from PIL import Image
 from multiprocessing import Pool
+
+import numpy as np
+from PIL import Image
 
 import flood_fill_filter.private.calculations as calculations
 import flood_fill_filter.private.xyz_loader as xyz_loader
+from flood_fill_filter.private.xyz import Xyz
 from flood_fill_filter.linear_srgb_conv import *
 
 __all__ = (
@@ -107,8 +109,19 @@ def filter_row(input):
     }
 
 
-def filter(linear_rgba, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.45):
+def filter(linear_rgba, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.45, denoise=False):
     original_image = xyz_loader.from_rgba(linear_rgba)
+    first_pass = one_pass(original_image, y_threshold, kernel_margin, ratio_threshold).astype(np.float32)
+
+    if denoise:
+        first_pass_xyz = Xyz(first_pass, np.zeros_like(first_pass), np.zeros_like(first_pass))
+        second_pass = np.logical_not(one_pass(first_pass_xyz, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.05))
+        return np.logical_or(first_pass, second_pass)
+    else:
+        return first_pass
+
+
+def one_pass(original_image, y_threshold, kernel_margin, ratio_threshold):
     equality_matrices = calculations.equality_matrices(original_image, kernel_margin, y_threshold)
 
     flood_fill_result = np.zeros((original_image.h, original_image.w), dtype=np.bool)

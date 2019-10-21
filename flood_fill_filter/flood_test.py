@@ -31,9 +31,34 @@ def load_folder(folder_name):
     return diff_list
 
 
+def load_denoise_samples():
+    directory = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir), 'samples3')
+    input_list = ['xm50.jpg', 'xm20.jpg']
+    output_list = ['xm50_fff_denoise.png', 'xm20_fff_denoise.png']
+
+    diff_list = []
+
+    for i, input_image in enumerate(input_list):
+        input = flood.read_linear(os.path.join(directory, input_image))
+        ouput = flood.filter(input, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.45, denoise=True)
+
+        expected_output_filename = output_list[i]
+        expected_output = np.array(Image.open(os.path.join(directory, expected_output_filename)).convert('L')) > 128
+        diff_count = np.sum(np.logical_xor(ouput, expected_output))
+
+        diff_list.append({
+            'file': input_image,
+            'output_file': expected_output_filename,
+            'shape': input.shape,
+            'diff_count': diff_count
+        })
+
+    return diff_list
+
 class TestSamples(unittest.TestCase):
     samples = load_folder('samples')
     samples2 = load_folder('samples2')
+    denoise_samples = load_denoise_samples()
 
     def test_fill_center(self):
         filled_matrix = np.zeros((5, 5), dtype=np.bool)
@@ -238,6 +263,17 @@ class TestSamples(unittest.TestCase):
         for image in self.samples2:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
             assert diff_per_cent < (100 - 99), \
+                '{} {} has {} different pixels ({}%)'.format(
+                    image['file'],
+                    image['output_file'],
+                    image['diff_count'],
+                    diff_per_cent
+                )
+
+    def test_denoise(self):
+        for image in self.denoise_samples:
+            diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
+            assert diff_per_cent == 0, \
                 '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
                     image['output_file'],
