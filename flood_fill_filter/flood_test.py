@@ -59,8 +59,6 @@ def load_samples3():
 
 class TestSamples(unittest.TestCase):
     samples = load_folder('samples', y_threshold=0.092)
-    samples2 = load_folder('samples2', y_threshold=0.08, denoise=True)
-    denoise_samples = load_samples3()
 
     def test_fill_center(self):
         filled_matrix = np.zeros((5, 5), dtype=np.bool)
@@ -251,7 +249,8 @@ class TestSamples(unittest.TestCase):
                 )
 
     def test_2(self):
-        for image in self.samples2:
+        samples2 = load_folder('samples2', y_threshold=0.08, denoise=True)
+        for image in samples2:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
             assert diff_per_cent < (100 - 99.9615), \
                 '{} {} has {} different pixels ({}%)'.format(
@@ -262,7 +261,8 @@ class TestSamples(unittest.TestCase):
                 )
 
     def test_denoise(self):
-        for image in self.denoise_samples:
+        denoise_samples = load_samples3()
+        for image in denoise_samples:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
             assert diff_per_cent == 0, \
                 '{} {} has {} different pixels ({}%)'.format(
