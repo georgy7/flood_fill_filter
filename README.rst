@@ -5,7 +5,7 @@ Flood Fill Filter
 
 ----
 
- | |Build Status| |PyPI|
+ | |Python versions: 3.3 and above| |Build Status| |PyPI|
 
 
 Summary
@@ -160,5 +160,7 @@ Pixels in the fill process are compared to the fill start point, not to the adja
 .. |readme_fff_fffa005| image:: samples3/readme_fff_fffa005.png
 
 .. |readme_fff_denoise| image:: samples3/readme_fff_denoise.png
+
+.. |Python versions: 3.3 and above| image:: https://img.shields.io/pypi/pyversions/flood_fill_filter.svg?style=flat
 
 .. _Русский: https://github.com/georgy7/flood_fill_filter/blob/master/README_ru.rst

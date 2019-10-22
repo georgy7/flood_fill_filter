@@ -5,7 +5,7 @@ English_
 
 ----
 
- | |Build Status| |PyPI|
+ | |Python versions: 3.3 and above| |Build Status| |PyPI|
 
 
 Краткое описание
@@ -156,5 +156,7 @@ Yγ выше 0,7 корректируется таким образом, что 
 .. |readme_fff_fffa005| image:: samples3/readme_fff_fffa005.png
 
 .. |readme_fff_denoise| image:: samples3/readme_fff_denoise.png
+
+.. |Python versions: 3.3 and above| image:: https://img.shields.io/pypi/pyversions/flood_fill_filter.svg?style=flat
 
 .. _English: https://github.com/georgy7/flood_fill_filter/blob/master/README.rst

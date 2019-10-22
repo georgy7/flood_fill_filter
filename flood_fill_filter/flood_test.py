@@ -1,12 +1,13 @@
-import numpy as np
 import os
 import unittest
+
+import numpy as np
 from PIL import Image
 
 import flood_fill_filter.flood as flood
 
 
-def load_folder(folder_name):
+def load_folder(folder_name, y_threshold, denoise=False):
     directory = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir), folder_name)
     input_list = sorted([f for f in os.listdir(directory) if f.endswith('_orig.jpg') or f.endswith('_orig.png')])
     output_list = sorted([f for f in os.listdir(directory) if f.endswith('_fff.png')])
@@ -15,7 +16,7 @@ def load_folder(folder_name):
 
     for i, input_image in enumerate(input_list):
         input = flood.read_linear(os.path.join(directory, input_image))
-        ouput = flood.filter(input, y_threshold=0.092)
+        ouput = flood.filter(input, y_threshold=y_threshold, denoise=denoise)
 
         expected_output_filename = output_list[i]
         expected_output = np.array(Image.open(os.path.join(directory, expected_output_filename)).convert('L')) > 128
@@ -31,7 +32,7 @@ def load_folder(folder_name):
     return diff_list
 
 
-def load_denoise_samples():
+def load_samples3():
     directory = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir), 'samples3')
     input_list = ['xm50.jpg', 'xm20.jpg']
     output_list = ['xm50_fff_denoise.png', 'xm20_fff_denoise.png']
@@ -55,10 +56,11 @@ def load_denoise_samples():
 
     return diff_list
 
+
 class TestSamples(unittest.TestCase):
-    samples = load_folder('samples')
-    samples2 = load_folder('samples2')
-    denoise_samples = load_denoise_samples()
+    samples = load_folder('samples', y_threshold=0.092)
+    samples2 = load_folder('samples2', y_threshold=0.08, denoise=True)
+    denoise_samples = load_samples3()
 
     def test_fill_center(self):
         filled_matrix = np.zeros((5, 5), dtype=np.bool)
@@ -248,21 +250,10 @@ class TestSamples(unittest.TestCase):
                     diff_per_cent
                 )
 
-    def test2_90(self):
+    def test_2(self):
         for image in self.samples2:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
-            assert diff_per_cent < (100 - 90), \
-                '{} {} has {} different pixels ({}%)'.format(
-                    image['file'],
-                    image['output_file'],
-                    image['diff_count'],
-                    diff_per_cent
-                )
-
-    def test2_99(self):
-        for image in self.samples2:
-            diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
-            assert diff_per_cent < (100 - 99), \
+            assert diff_per_cent < (100 - 99.9615), \
                 '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
                     image['output_file'],
