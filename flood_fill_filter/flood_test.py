@@ -7,10 +7,11 @@ from PIL import Image
 import flood_fill_filter.flood as flood
 
 
-def load_folder(folder_name, y_threshold, denoise=False):
+def load_folder(folder_name, y_threshold, denoise=False, filename_predicate=lambda s: True):
     directory = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir), folder_name)
-    input_list = sorted([f for f in os.listdir(directory) if f.endswith('_orig.jpg') or f.endswith('_orig.png')])
-    output_list = sorted([f for f in os.listdir(directory) if f.endswith('_fff.png')])
+    input_list = sorted([f for f in os.listdir(directory) if
+                         (f.endswith('_orig.jpg') or f.endswith('_orig.png')) and filename_predicate(f)])
+    output_list = sorted([f for f in os.listdir(directory) if f.endswith('_fff.png') and filename_predicate(f)])
 
     diff_list = []
 
@@ -248,11 +249,51 @@ class TestSamples(unittest.TestCase):
                     diff_per_cent
                 )
 
-    def test_2(self):
-        samples2 = load_folder('samples2', y_threshold=0.08, denoise=True)
+    def test_2_q20(self):
+        samples2 = load_folder('samples2', y_threshold=0.08, denoise=True,
+                               filename_predicate=lambda f: '_q20_' in f)
         for image in samples2:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
-            assert diff_per_cent < (100 - 99.9615), \
+            assert diff_per_cent < (100 - 99.99), \
+                '{} {} has {} different pixels ({}%)'.format(
+                    image['file'],
+                    image['output_file'],
+                    image['diff_count'],
+                    diff_per_cent
+                )
+
+    def test_2_q40(self):
+        samples2 = load_folder('samples2', y_threshold=0.08, denoise=True,
+                               filename_predicate=lambda f: '_q40_' in f)
+        for image in samples2:
+            diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
+            assert diff_per_cent < (100 - 99.99), \
+                '{} {} has {} different pixels ({}%)'.format(
+                    image['file'],
+                    image['output_file'],
+                    image['diff_count'],
+                    diff_per_cent
+                )
+
+    def test_2_q70(self):
+        samples2 = load_folder('samples2', y_threshold=0.08, denoise=True,
+                               filename_predicate=lambda f: '_q70_' in f)
+        for image in samples2:
+            diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
+            assert diff_per_cent < (100 - 99.99), \
+                '{} {} has {} different pixels ({}%)'.format(
+                    image['file'],
+                    image['output_file'],
+                    image['diff_count'],
+                    diff_per_cent
+                )
+
+    def test_2_q100(self):
+        samples2 = load_folder('samples2', y_threshold=0.08, denoise=True,
+                               filename_predicate=lambda f: '_q100_' in f)
+        for image in samples2:
+            diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
+            assert diff_per_cent < (100 - 99.99), \
                 '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
                     image['output_file'],
