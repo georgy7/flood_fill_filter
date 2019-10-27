@@ -1,3 +1,4 @@
+import itertools
 import os
 from multiprocessing import Pool
 
@@ -6,8 +7,8 @@ from PIL import Image
 
 import flood_fill_filter.private.calculations as calculations
 import flood_fill_filter.private.xyz_loader as xyz_loader
-from flood_fill_filter.private.xyz import Xyz
 from flood_fill_filter.linear_srgb_conv import *
+from flood_fill_filter.private.xyz import Xyz
 
 __all__ = (
     'read_linear',
@@ -34,14 +35,21 @@ def filled(filled_matrix, y_offset, x_offset, kernel_margin):
     ]
 
 
-def fill(filled_matrix, y_offset, left_x_offset_inclusive, right_x_offset_inclusive, kernel_margin):
+def fill(filled_matrix, y_offset, left_x_offset_inclusive, right_x_offset_inclusive, kernel_margin, counter):
     filled_matrix[
     y_offset + kernel_margin,
     (left_x_offset_inclusive + kernel_margin):(right_x_offset_inclusive + kernel_margin + 1)
     ] = True
 
+    assert right_x_offset_inclusive >= left_x_offset_inclusive
 
-def recursive_step(a, filled_matrix, yx_tuple, ratio_threshold, kernel_margin):
+    for _ in itertools.repeat(None, (right_x_offset_inclusive - left_x_offset_inclusive + 1)):
+        last_value = counter.__next__()
+
+    return last_value
+
+
+def recursive_step(a, filled_matrix, yx_tuple, count_threshold, kernel_margin, counter):
     y = yx_tuple[0]
     initial_x = yx_tuple[1]
 
@@ -60,24 +68,30 @@ def recursive_step(a, filled_matrix, yx_tuple, ratio_threshold, kernel_margin):
         else:
             break
 
-    fill(filled_matrix, y, left_border_inclusive, right_border_inclusive, kernel_margin)
+    value = fill(filled_matrix, y, left_border_inclusive, right_border_inclusive, kernel_margin, counter)
+
+    # assert (np.sum(filled_matrix) - 1) == value
+
+    if value > count_threshold:
+        return
 
     if y > -kernel_margin:
         for x in range(left_border_inclusive, right_border_inclusive + 1):
             if not filled(filled_matrix, y - 1, x, kernel_margin) and get_eq(a, y - 1, x, kernel_margin):
-                recursive_step(a, filled_matrix, (y - 1, x), ratio_threshold, kernel_margin)
+                recursive_step(a, filled_matrix, (y - 1, x), count_threshold, kernel_margin, counter)
 
     if y < kernel_margin:
         for x in range(left_border_inclusive, right_border_inclusive + 1):
             if not filled(filled_matrix, y + 1, x, kernel_margin) and get_eq(a, y + 1, x, kernel_margin):
-                recursive_step(a, filled_matrix, (y + 1, x), ratio_threshold, kernel_margin)
+                recursive_step(a, filled_matrix, (y + 1, x), count_threshold, kernel_margin, counter)
 
 
-def recursive_flood_fill(a, ratio_threshold, kernel_margin):
+def recursive_flood_fill(a, count_threshold, kernel_margin):
     kernel_diameter = kernel_margin + 1 + kernel_margin
     filled_points = np.zeros((kernel_diameter, kernel_diameter), dtype=np.bool)
-    recursive_step(a, filled_points, (0, 0), ratio_threshold, kernel_margin)
-    return np.sum(filled_points) - 1
+    counter = itertools.count()
+    recursive_step(a, filled_points, (0, 0), count_threshold, kernel_margin, counter)
+    return counter.__next__() - 1
 
 
 def window_square(left_border, right_border, top_border, bottom_border):

@@ -3,6 +3,7 @@ import unittest
 
 import numpy as np
 from PIL import Image
+import itertools
 
 import flood_fill_filter.flood as flood
 
@@ -63,11 +64,11 @@ class TestSamples(unittest.TestCase):
 
     def test_fill_center(self):
         filled_matrix = np.zeros((5, 5), dtype=np.bool)
-        counter = [0]
+        counter = itertools.count()
         flood.fill(filled_matrix, 0, 0, 0, 2, counter)
 
         assert 5 == 2 + 1 + 2
-        assert np.sum(filled_matrix) == counter[0]
+        assert np.sum(filled_matrix) == counter.__next__()
 
         expected_result = np.array([
             [False, False, False, False, False],
@@ -82,11 +83,11 @@ class TestSamples(unittest.TestCase):
 
     def test_fill_center_to_right(self):
         filled_matrix = np.zeros((5, 5), dtype=np.bool)
-        counter = [0]
+        counter = itertools.count()
         flood.fill(filled_matrix, 0, 0, 2, 2, counter)
 
         assert 5 == 2 + 1 + 2
-        assert np.sum(filled_matrix) == counter[0]
+        assert np.sum(filled_matrix) == counter.__next__()
 
         expected_result = np.array([
             [False, False, False, False, False],
@@ -101,11 +102,11 @@ class TestSamples(unittest.TestCase):
 
     def test_fill_center_to_left(self):
         filled_matrix = np.zeros((5, 5), dtype=np.bool)
-        counter = [0]
+        counter = itertools.count()
         flood.fill(filled_matrix, 0, -2, 0, 2, counter)
 
         assert 5 == 2 + 1 + 2
-        assert np.sum(filled_matrix) == counter[0]
+        assert np.sum(filled_matrix) == counter.__next__()
 
         expected_result = np.array([
             [False, False, False, False, False],
@@ -120,11 +121,11 @@ class TestSamples(unittest.TestCase):
 
     def test_fill_top_row(self):
         filled_matrix = np.zeros((5, 5), dtype=np.bool)
-        counter = [0]
+        counter = itertools.count()
         flood.fill(filled_matrix, -2, -2, 2, 2, counter)
 
         assert 5 == 2 + 1 + 2
-        assert np.sum(filled_matrix) == counter[0]
+        assert np.sum(filled_matrix) == counter.__next__()
 
         expected_result = np.array([
             [True, True, True, True, True],
@@ -139,11 +140,11 @@ class TestSamples(unittest.TestCase):
 
     def test_fill_bottom_row(self):
         filled_matrix = np.zeros((5, 5), dtype=np.bool)
-        counter = [0]
+        counter = itertools.count()
         flood.fill(filled_matrix, 2, -2, 2, 2, counter)
 
         assert 5 == 2 + 1 + 2
-        assert np.sum(filled_matrix) == counter[0]
+        assert np.sum(filled_matrix) == counter.__next__()
 
         expected_result = np.array([
             [False, False, False, False, False],
