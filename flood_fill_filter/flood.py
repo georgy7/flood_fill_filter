@@ -43,6 +43,8 @@ def fill(filled_matrix, y_offset, left_x_offset_inclusive, right_x_offset_inclus
 
     assert right_x_offset_inclusive >= left_x_offset_inclusive
 
+    last_value = 0
+
     for _ in itertools.repeat(None, (right_x_offset_inclusive - left_x_offset_inclusive + 1)):
         last_value = counter.__next__()
 
@@ -152,8 +154,10 @@ def one_pass(original_image, y_threshold, kernel_margin, ratio_threshold):
     ]
 
     worker_count = os.cpu_count()
-    if worker_count >= 4:
-        worker_count = round(worker_count / 2)
+    if worker_count > 8:
+        worker_count = worker_count - 2
+    elif worker_count > 4:
+        worker_count = worker_count - 1
 
     pool = Pool(worker_count)
     filled_rows = pool.map(filter_row, input_rows)
