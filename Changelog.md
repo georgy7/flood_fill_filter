@@ -17,3 +17,7 @@ Scanline fill with a preliminary calculation array — 16s
 ## 2018-10-13
 
 Multiprocessing — 4s
+
+## 2020-03-06
+
+Breadth-first filling with memoization. Up to two times faster.
