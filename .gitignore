@@ -9,4 +9,5 @@ c/.codelite
 
 build
 dist
+prof
 *.egg-info
