@@ -92,30 +92,19 @@ class AdjacentMatrixHolder:
         self.not_offsets_origin_mask = int(np.packbits(self.not_offsets_origin_mask).data.hex(), 16)
         self.offsets_origin_mask = int(np.packbits(self.offsets_origin_mask).data.hex(), 16)
 
-    @functools.lru_cache(maxsize=32000)
+    @functools.lru_cache(maxsize=64000)
     def get_or_result(self, this_step_result):
         this_step_result_bytes = this_step_result.to_bytes(math.ceil(len(self.offsets) / 8), byteorder='big')
-        this_step_result_array = np.frombuffer(this_step_result_bytes, dtype = np.uint8)
+        this_step_result_array = np.frombuffer(this_step_result_bytes, dtype=np.uint8)
         this_step_result_indices = np.nonzero(np.unpackbits(this_step_result_array))[0].tolist()
         adjacent_offset_rows = self.matrix[this_step_result_indices]
         return int(np.bitwise_or.reduce(adjacent_offset_rows, axis=0).data.hex(), 16)
 
-    def get_next_to_fill_mask(self, this_step_result, filled_offsets):
-        or_result = self.get_or_result(this_step_result)
-        return or_result & ~(self.not_offsets_origin_mask & filled_offsets)
-
     def get_offsets_origin_mask(self):
         return self.offsets_origin_mask
 
-    def equality_matrices_to_bit_masks(self, matrices):
-        result = np.zeros((matrices.shape[0], matrices.shape[1], len(self.offsets)), dtype=np.bool)
-
-        for i in range(len(self.offsets)):
-            offset = self.offsets[i]
-            result[:, :, i] = matrices[:, :, offset[0] + self.kernel_margin, offset[1] + self.kernel_margin]
-
-        result = np.packbits(result, axis=2)
-        return result
+    def get_not_offsets_origin_mask(self):
+        return self.not_offsets_origin_mask
 
 
 def filter_chunk(input):
@@ -123,6 +112,9 @@ def filter_chunk(input):
     adjacency_martix_holder, ratio_threshold = input
 
     result = np.zeros((max_y_exclusive - min_y, w), dtype=np.bool)
+
+    origin_mask = adjacency_martix_holder.get_offsets_origin_mask()
+    not_origin_mask = adjacency_martix_holder.get_not_offsets_origin_mask()
 
     for y in range(min_y, max_y_exclusive):
         yi = y - min_y
@@ -133,18 +125,15 @@ def filter_chunk(input):
             count_threshold = int((lrtb(x, w, kernel_margin) * tb - 1) * ratio_threshold)
 
             filled_offsets = 0x0
-            filled_offsets_count = bin(filled_offsets).count("1")
+            filled_offsets_count = 0
 
-            previous_filling_iteration_result = adjacency_martix_holder.get_offsets_origin_mask()
+            previous_filling_iteration_result = origin_mask
 
             get_eq_mask = int(equality_matrices_rows[yi, x].data.hex(), 16)
 
             while (filled_offsets_count <= count_threshold) and (0x0 != previous_filling_iteration_result):
-
-                what_to_fill_next = adjacency_martix_holder.get_next_to_fill_mask(
-                    previous_filling_iteration_result,
-                    filled_offsets
-                )
+                or_result = adjacency_martix_holder.get_or_result(previous_filling_iteration_result)
+                what_to_fill_next = or_result & ~(not_origin_mask & filled_offsets)
 
                 previous_filling_iteration_result = what_to_fill_next & get_eq_mask
                 filled_offsets = filled_offsets | previous_filling_iteration_result
@@ -159,27 +148,25 @@ def filter_chunk(input):
     }
 
 
-def filter(linear_rgba, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.45, denoise=False):
+def filter(linear_rgba, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.45, denoise=False, single_thread=False):
     original_image = xyz_loader.from_rgba(linear_rgba)
-    first_pass = one_pass(original_image, y_threshold, kernel_margin, ratio_threshold).astype(np.float32)
+    first_pass = one_pass(original_image, y_threshold, kernel_margin, ratio_threshold, single_thread).astype(np.float32)
 
     if denoise:
         first_pass_xyz = Xyz(first_pass, np.zeros_like(first_pass), np.zeros_like(first_pass))
-        second_pass = np.logical_not(one_pass(first_pass_xyz, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.05))
+        second_pass = np.logical_not(one_pass(first_pass_xyz, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.05, single_thread=single_thread))
         return np.logical_or(first_pass, second_pass)
     else:
         return first_pass
 
 
-def one_pass(original_image, y_threshold, kernel_margin, ratio_threshold):
+def one_pass(original_image, y_threshold, kernel_margin, ratio_threshold, single_thread):
     assert ratio_threshold > 0.0
     assert ratio_threshold < 1.0
 
     adjacency_martix_holder = AdjacentMatrixHolder(kernel_margin)
 
-    equality_masks = adjacency_martix_holder.equality_matrices_to_bit_masks(
-        calculations.equality_matrices(original_image, kernel_margin, y_threshold)
-    )
+    equality_masks = calculations.equality_matrices(original_image, kernel_margin, y_threshold, adjacency_martix_holder.offsets)
 
     flood_fill_result = np.zeros((original_image.h, original_image.w), dtype=np.bool)
 
@@ -191,10 +178,12 @@ def one_pass(original_image, y_threshold, kernel_margin, ratio_threshold):
     elif worker_count > 4:
         worker_count = worker_count - 1
 
-    chunk_size = int(h / min(worker_count, h))
-    chunk_count = math.ceil(h / chunk_size)
-    # chunk_size = h
-    # chunk_count = 1
+    if single_thread:
+        chunk_size = h
+        chunk_count = 1
+    else:
+        chunk_size = int(h / min(worker_count, h))
+        chunk_count = math.ceil(h / chunk_size)
 
     input_rows = [
         (
@@ -209,10 +198,12 @@ def one_pass(original_image, y_threshold, kernel_margin, ratio_threshold):
         for chunk in range(chunk_count)
     ]
 
-    pool = Pool(worker_count)
-    filled_rows = pool.imap_unordered(filter_chunk, input_rows)
-    pool.close()
-    # filled_rows = list(map(filter_chunk, input_rows))
+    if single_thread:
+        filled_rows = list(map(filter_chunk, input_rows))
+    else:
+        pool = Pool(worker_count)
+        filled_rows = pool.imap_unordered(filter_chunk, input_rows)
+        pool.close()
 
     for filled_row in filled_rows:
         flood_fill_result[filled_row['min_y']:filled_row['max_y_exclusive'], :] = filled_row['array']
