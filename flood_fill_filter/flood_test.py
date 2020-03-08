@@ -16,7 +16,7 @@ def cli_params_class(pytestconfig, request):
 def load_folder(folder_name, y_threshold, denoise=False, single_thread=False, filename_predicate=lambda s: True):
     directory = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir), folder_name)
     input_list = sorted([f for f in os.listdir(directory) if
-                         (f.endswith('_orig.jpg') or f.endswith('_orig.png')) and filename_predicate(f)])
+                         (f.endswith('_orig.bmp')) and filename_predicate(f)])
     output_list = sorted([f for f in os.listdir(directory) if f.endswith('_fff.png') and filename_predicate(f)])
 
     diff_list = []
@@ -42,7 +42,7 @@ def load_folder(folder_name, y_threshold, denoise=False, single_thread=False, fi
 
 def load_samples3(single_thread):
     directory = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir), 'samples3')
-    input_list = ['xm50.jpg', 'xm20.jpg']
+    input_list = ['xm50.bmp', 'xm20.bmp']
     output_list = ['xm50_fff_denoise.png', 'xm20_fff_denoise.png']
 
     diff_list = []
