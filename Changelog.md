@@ -21,3 +21,8 @@ Multiprocessing — 4s
 ## 2020-03-06
 
 Breadth-first filling with memoization. Up to two times faster.
+
+## 2020-03-08
+
+Solution based on the native Python bitwise operators: `& ~ |`.
+Much faster.

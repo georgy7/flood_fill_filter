@@ -63,11 +63,8 @@ already exists.*
 Limitations of the method
 -------------------------
 
-1. It will not work automatically if the contrast is increased significantly after JPEG compression.
+It will not work automatically if the contrast is increased significantly after JPEG compression.
 In this case, the :code:`--diff` parameter should be selected manually (it is :code:`0.08` by default)
-
-2. The filter requires hundreds of times more computing resources than the Prewitt operator
-and the most other convolution-based filters.
 
 Installation
 ------------

@@ -30,20 +30,11 @@ def read_linear(file):
     return to_linear(im[:, :, 0], im[:, :, 1], im[:, :, 2], im[:, :, 3])
 
 
-def window_square(left_border, right_border, top_border, bottom_border):
-    return (1 + right_border - left_border) * (1 + bottom_border - top_border)
-
-
 @functools.lru_cache(maxsize=5000)
 def lrtb(coordinate, size, kernel_margin):
     a = max(0, coordinate - kernel_margin)
     b = min(size - 1, coordinate + kernel_margin)
-    return a, b
-
-
-def square_of_point(x, w, t, b, kernel_margin):
-    l, r = lrtb(x, w, kernel_margin)
-    return window_square(l, r, t, b) - 1
+    return (1 + b - a)
 
 
 def connect_offsets(adjacency_martix, p1, p2):
@@ -91,61 +82,73 @@ class AdjacentMatrixHolder:
 
             self.matrix = np.packbits(adjacency_martix, axis=1)
             self.offsets = offsets
+
         self.offsets_origin = int(len(self.offsets) / 2)
 
-    @functools.lru_cache(maxsize=32000)
-    def get_or_result(self, previous_filling_iteration_result):
-        adjacent_offset_rows = self.matrix[list(previous_filling_iteration_result)]
-        return np.bitwise_or.reduce(adjacent_offset_rows, axis=0)
+        self.not_offsets_origin_mask = np.ones((len(self.offsets)), dtype=np.bool)
+        self.not_offsets_origin_mask[self.offsets_origin] = False
+        self.offsets_origin_mask = np.logical_not(self.not_offsets_origin_mask)
 
-    @functools.lru_cache(maxsize=64000)
-    def get_adjacent_offsets(self, previous_filling_iteration_result, filled_offsets):
-        or_result = self.get_or_result(previous_filling_iteration_result)
-        adjacent_offsets = np.bitwise_and(or_result, np.bitwise_not(np.asarray(filled_offsets, dtype=np.uint8)))
-        r1 = np.nonzero(np.unpackbits(adjacent_offsets))[0]
-        return [(self.offsets[i], i) for i in r1.tolist()]
+        self.not_offsets_origin_mask = int(np.packbits(self.not_offsets_origin_mask).data.hex(), 16)
+        self.offsets_origin_mask = int(np.packbits(self.offsets_origin_mask).data.hex(), 16)
+
+    @functools.lru_cache(maxsize=32000)
+    def get_or_result(self, this_step_result):
+        this_step_result_bytes = this_step_result.to_bytes(math.ceil(len(self.offsets) / 8), byteorder='big')
+        this_step_result_array = np.frombuffer(this_step_result_bytes, dtype = np.uint8)
+        this_step_result_indices = np.nonzero(np.unpackbits(this_step_result_array))[0].tolist()
+        adjacent_offset_rows = self.matrix[this_step_result_indices]
+        return int(np.bitwise_or.reduce(adjacent_offset_rows, axis=0).data.hex(), 16)
+
+    def get_next_to_fill_mask(self, this_step_result, filled_offsets):
+        or_result = self.get_or_result(this_step_result)
+        return or_result & ~(self.not_offsets_origin_mask & filled_offsets)
+
+    def get_offsets_origin_mask(self):
+        return self.offsets_origin_mask
+
+    def equality_matrices_to_bit_masks(self, matrices):
+        result = np.zeros((matrices.shape[0], matrices.shape[1], len(self.offsets)), dtype=np.bool)
+
+        for i in range(len(self.offsets)):
+            offset = self.offsets[i]
+            result[:, :, i] = matrices[:, :, offset[0] + self.kernel_margin, offset[1] + self.kernel_margin]
+
+        result = np.packbits(result, axis=2)
+        return result
 
 
 def filter_chunk(input):
     equality_matrices_rows, h, w, min_y, max_y_exclusive, kernel_margin, \
     adjacency_martix_holder, ratio_threshold = input
 
-    offsets_origin = adjacency_martix_holder.offsets_origin
-
     result = np.zeros((max_y_exclusive - min_y, w), dtype=np.bool)
-
-    filled_offsets = np.zeros((len(adjacency_martix_holder.offsets)), dtype=np.bool)
 
     for y in range(min_y, max_y_exclusive):
         yi = y - min_y
 
-        t, b = lrtb(y, h, kernel_margin)
+        tb = lrtb(y, h, kernel_margin)
 
         for x in range(w):
-            count_threshold = int(square_of_point(x, w, t, b, kernel_margin) * ratio_threshold)
+            count_threshold = int((lrtb(x, w, kernel_margin) * tb - 1) * ratio_threshold)
 
-            filled_offsets.fill(False)
-            filled_offsets_count = 0
+            filled_offsets = 0x0
+            filled_offsets_count = bin(filled_offsets).count("1")
 
-            previous_filling_iteration_result = [offsets_origin]
+            previous_filling_iteration_result = adjacency_martix_holder.get_offsets_origin_mask()
 
-            get_eq_matrix = equality_matrices_rows[yi, x]
+            get_eq_mask = int(equality_matrices_rows[yi, x].data.hex(), 16)
 
-            while (len(previous_filling_iteration_result) > 0) and (filled_offsets_count <= count_threshold):
+            while (filled_offsets_count <= count_threshold) and (0x0 != previous_filling_iteration_result):
 
-                filled_offsets[offsets_origin] = False
-
-                params = adjacency_martix_holder.get_adjacent_offsets(
-                    tuple(previous_filling_iteration_result),
-                    tuple(np.packbits(filled_offsets).tolist())
+                what_to_fill_next = adjacency_martix_holder.get_next_to_fill_mask(
+                    previous_filling_iteration_result,
+                    filled_offsets
                 )
 
-                previous_filling_iteration_result = []
-                for offset, offset_index in params:
-                    if get_eq_matrix[offset[0] + kernel_margin, offset[1] + kernel_margin]:
-                        previous_filling_iteration_result.append(offset_index)
-                        filled_offsets[offset_index] = True
-                        filled_offsets_count += 1
+                previous_filling_iteration_result = what_to_fill_next & get_eq_mask
+                filled_offsets = filled_offsets | previous_filling_iteration_result
+                filled_offsets_count = bin(filled_offsets).count("1")
 
             result[yi, x] = filled_offsets_count > count_threshold
 
@@ -171,9 +174,12 @@ def filter(linear_rgba, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.45,
 def one_pass(original_image, y_threshold, kernel_margin, ratio_threshold):
     assert ratio_threshold > 0.0
     assert ratio_threshold < 1.0
-    equality_matrices = calculations.equality_matrices(original_image, kernel_margin, y_threshold)
 
     adjacency_martix_holder = AdjacentMatrixHolder(kernel_margin)
+
+    equality_masks = adjacency_martix_holder.equality_matrices_to_bit_masks(
+        calculations.equality_matrices(original_image, kernel_margin, y_threshold)
+    )
 
     flood_fill_result = np.zeros((original_image.h, original_image.w), dtype=np.bool)
 
@@ -192,7 +198,7 @@ def one_pass(original_image, y_threshold, kernel_margin, ratio_threshold):
 
     input_rows = [
         (
-            equality_matrices[(chunk * chunk_size):(min(h, ((chunk + 1) * chunk_size)))].copy(),
+            equality_masks[(chunk * chunk_size):(min(h, ((chunk + 1) * chunk_size)))].copy(),
             h, w,
             (chunk * chunk_size),
             (min(h, ((chunk + 1) * chunk_size))),
