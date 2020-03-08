@@ -26,3 +26,5 @@ Breadth-first filling with memoization. Up to two times faster.
 
 Solution based on the native Python bitwise operators: `& ~ |`.
 Much faster.
+
+End of support of Python 3.4.
