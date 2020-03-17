@@ -3,6 +3,7 @@ import unittest
 import pytest
 
 import numpy as np
+import math
 from PIL import Image
 
 import flood_fill_filter.flood as flood
@@ -74,6 +75,46 @@ class TestSamples(unittest.TestCase):
         if not hasattr(cls, "samples"):
             assert hasattr(o, "single_thread")
             cls.samples = load_folder('samples', y_threshold=0.092, single_thread=o.single_thread)
+
+    def test_adjacent_matrix_holder_2(self):
+        holder = flood.AdjacentMatrixHolder(2)
+        assert len(holder.offsets) == 25
+
+        for offset1_index, offset1 in enumerate(holder.offsets):
+            request_mask = np.zeros((len(holder.offsets)), dtype=np.bool)
+            request_mask[offset1_index] = True
+            request_mask = int(np.packbits(request_mask).data.hex(), 16)
+
+            adjacent_offsets = holder.get_or_result(request_mask)
+            adjacent_offsets_bytes = adjacent_offsets.to_bytes(math.ceil(len(holder.offsets) / 8), byteorder='big')
+            adjacent_offsets_array = np.unpackbits(np.frombuffer(adjacent_offsets_bytes, dtype=np.uint8))
+
+            for offset2_index, offset2 in enumerate(holder.offsets):
+                if ((abs(offset1[0] - offset2[0]) == 1) and (offset1[1] == offset2[1])) or \
+                        ((abs(offset1[1] - offset2[1]) == 1) and (offset1[0] == offset2[0])):
+                    assert adjacent_offsets_array[offset2_index]
+                else:
+                    assert False == adjacent_offsets_array[offset2_index]
+
+    def test_adjacent_matrix_holder_5(self):
+        holder = flood.AdjacentMatrixHolder(5)
+        assert len(holder.offsets) == 121
+
+        for offset1_index, offset1 in enumerate(holder.offsets):
+            request_mask = np.zeros((len(holder.offsets)), dtype=np.bool)
+            request_mask[offset1_index] = True
+            request_mask = int(np.packbits(request_mask).data.hex(), 16)
+
+            adjacent_offsets = holder.get_or_result(request_mask)
+            adjacent_offsets_bytes = adjacent_offsets.to_bytes(math.ceil(len(holder.offsets) / 8), byteorder='big')
+            adjacent_offsets_array = np.unpackbits(np.frombuffer(adjacent_offsets_bytes, dtype=np.uint8))
+
+            for offset2_index, offset2 in enumerate(holder.offsets):
+                if ((abs(offset1[0] - offset2[0]) == 1) and (offset1[1] == offset2[1])) or \
+                        ((abs(offset1[1] - offset2[1]) == 1) and (offset1[0] == offset2[0])):
+                    assert adjacent_offsets_array[offset2_index]
+                else:
+                    assert False == adjacent_offsets_array[offset2_index]
 
     def test_90(self):
         self.initialize_samples(self)
