@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def equality_matrices(original_image, kernel_margin, y_threshold, offsets):
+def equality_matrices(original_image, kernel_margin, y_threshold, offsets, pack=True):
     image = original_image.expand(kernel_margin)
 
     result = np.zeros(
@@ -46,4 +46,7 @@ def equality_matrices(original_image, kernel_margin, y_threshold, offsets):
         result[:, :, offset_index] = \
             data_to_compare.eq(original_image, y_threshold)
 
-    return np.packbits(result, axis=2)
+    if pack:
+        return np.packbits(result, axis=2)
+    else:
+        return result
