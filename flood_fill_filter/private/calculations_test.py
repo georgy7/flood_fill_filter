@@ -27,7 +27,12 @@ class TestCalculations(unittest.TestCase):
         assert equality_masks.shape[1] == 195
         assert equality_masks.shape[2] == kernel_diameter * kernel_diameter
 
+        csv_offsets = np.loadtxt(os.path.join(directory, 'xm20_eq_offsets.csv'), delimiter=',')
+
         expected = np.loadtxt(os.path.join(directory, 'xm20_eq.csv.gz'), delimiter=',')
         expected = expected.reshape((136, 195, kernel_diameter * kernel_diameter))
 
-        assert np.allclose(equality_masks, expected)
+        for csv_offset_index in range(csv_offsets.shape[0]):
+            csv_offset = tuple(csv_offsets[csv_offset_index])
+            holder_offset_index = adjacency_martix_holder.offsets.index(csv_offset)
+            assert np.allclose(equality_masks[:, :, holder_offset_index], expected[:, :, csv_offset_index])
