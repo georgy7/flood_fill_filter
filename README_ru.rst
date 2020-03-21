@@ -137,6 +137,12 @@ Yγ выше 0,7 корректируется таким образом, что 
 
 Пиксели с процессе заливки сравниваются с точкой начала заливки, а не со смежными пикселями.
 
+См. также
+---------
+
+`fffd
+<https://github.com/georgy7/fffd>`_
+
 .. |Build Status| image:: https://travis-ci.org/georgy7/flood_fill_filter.svg?branch=master
    :target: https://travis-ci.org/georgy7/flood_fill_filter
 .. |PyPI| image:: https://img.shields.io/pypi/v/flood-fill-filter.svg

@@ -1,3 +1,19 @@
+# flood-fill-filter - edge bunches detection tool.
+# Copyright (C) 2020  Georgy Ustinov  <georgy.ustinov.hello@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import os
 import unittest
 import pytest
@@ -96,6 +112,17 @@ class TestSamples(unittest.TestCase):
                 else:
                     assert False == adjacent_offsets_array[offset2_index]
 
+        origin_mask_bytes = holder.get_offsets_origin_mask(). \
+            to_bytes(math.ceil(len(holder.offsets) / 8), byteorder='big')
+        origin_mask_array = np.unpackbits(np.frombuffer(origin_mask_bytes, dtype=np.uint8))
+
+        not_origin_mask_bytes = holder.get_not_offsets_origin_mask(). \
+            to_bytes(math.ceil(len(holder.offsets) / 8), byteorder='big')
+        not_origin_mask_array = np.unpackbits(np.frombuffer(not_origin_mask_bytes, dtype=np.uint8))
+
+        assert np.count_nonzero(origin_mask_array) == 1
+        assert np.count_nonzero(not_origin_mask_array) == (len(holder.offsets) - 1)
+
     def test_adjacent_matrix_holder_5(self):
         holder = flood.AdjacentMatrixHolder(5)
         assert len(holder.offsets) == 121
@@ -115,6 +142,17 @@ class TestSamples(unittest.TestCase):
                     assert adjacent_offsets_array[offset2_index]
                 else:
                     assert False == adjacent_offsets_array[offset2_index]
+
+        origin_mask_bytes = holder.get_offsets_origin_mask(). \
+            to_bytes(math.ceil(len(holder.offsets) / 8), byteorder='big')
+        origin_mask_array = np.unpackbits(np.frombuffer(origin_mask_bytes, dtype=np.uint8))
+
+        not_origin_mask_bytes = holder.get_not_offsets_origin_mask(). \
+            to_bytes(math.ceil(len(holder.offsets) / 8), byteorder='big')
+        not_origin_mask_array = np.unpackbits(np.frombuffer(not_origin_mask_bytes, dtype=np.uint8))
+
+        assert np.count_nonzero(origin_mask_array) == 1
+        assert np.count_nonzero(not_origin_mask_array) == (len(holder.offsets) - 1)
 
     def test_90(self):
         self.initialize_samples(self)
@@ -152,11 +190,11 @@ class TestSamples(unittest.TestCase):
                     diff_per_cent
                 )
 
-    def test_999615(self):
+    def test_99_plus_one(self):
         self.initialize_samples(self)
         for image in self.samples:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
-            assert diff_per_cent < (100 - 99.9615), \
+            assert 0.0 == diff_per_cent, \
                 '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
                     image['output_file'],

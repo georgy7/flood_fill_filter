@@ -141,6 +141,12 @@ Each pixel is filled in four directions: horizontally and vertically, but not di
 
 Pixels in the fill process are compared to the fill start point, not to the adjacent pixels.
 
+See also
+--------
+
+`fffd
+<https://github.com/georgy7/fffd>`_
+
 .. |Build Status| image:: https://travis-ci.org/georgy7/flood_fill_filter.svg?branch=master
    :target: https://travis-ci.org/georgy7/flood_fill_filter
 .. |PyPI| image:: https://img.shields.io/pypi/v/flood-fill-filter.svg

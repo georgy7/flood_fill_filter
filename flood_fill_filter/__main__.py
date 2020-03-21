@@ -50,7 +50,7 @@ def main():
     )
 
     parser.add_argument('-d', '--diff', type=float_from_0_to_1_exclusive, default=0.08,
-                        help='Y (CIE XYZ) sensitivity. Default: 0.1.')
+                        help='Y (CIE XYZ) sensitivity. Default: 0.08.')
 
     parser.add_argument('-a', '--activation-threshold', type=float_from_0_to_1_exclusive, default=0.45,
                         help='The fraction of filled pixels within the fill window needed '
