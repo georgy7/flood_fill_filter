@@ -209,7 +209,7 @@ class TestSamples(unittest.TestCase):
                                filename_predicate=lambda f: '_q20_' in f)
         for image in samples2:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
-            assert diff_per_cent < (100 - 99.99), \
+            assert diff_per_cent == 0, \
                 '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
                     image['output_file'],
@@ -224,7 +224,7 @@ class TestSamples(unittest.TestCase):
                                filename_predicate=lambda f: '_q40_' in f)
         for image in samples2:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
-            assert diff_per_cent < (100 - 99.99), \
+            assert diff_per_cent == 0, \
                 '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
                     image['output_file'],
@@ -239,7 +239,7 @@ class TestSamples(unittest.TestCase):
                                filename_predicate=lambda f: '_q70_' in f)
         for image in samples2:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
-            assert diff_per_cent < (100 - 99.99), \
+            assert diff_per_cent == 0, \
                 '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
                     image['output_file'],
@@ -254,7 +254,7 @@ class TestSamples(unittest.TestCase):
                                filename_predicate=lambda f: '_q100_' in f)
         for image in samples2:
             diff_per_cent = image['diff_count'] / (image['shape'][0] * image['shape'][1]) * 100
-            assert diff_per_cent < (100 - 99.99), \
+            assert diff_per_cent == 0, \
                 '{} {} has {} different pixels ({}%)'.format(
                     image['file'],
                     image['output_file'],
