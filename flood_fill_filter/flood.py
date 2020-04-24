@@ -41,8 +41,17 @@ builtin_filter = filter
 
 
 def read_linear(file):
-    im = Image.open(file).convert('RGBA')
-    im = np.array(im, dtype=np.float32)
+    im = Image.open(file)
+    return pil_image_to_linear(im)
+
+
+def pil_image_to_linear(image):
+    rgba = image
+
+    if 'RGBA' != rgba.mode:
+        rgba = rgba.convert('RGBA')
+
+    im = np.array(rgba, dtype=np.float32)
     return to_linear(im[:, :, 0], im[:, :, 1], im[:, :, 2], im[:, :, 3])
 
 
@@ -170,7 +179,8 @@ def filter(linear_rgba, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.45,
 
     if denoise:
         first_pass_xyz = Xyz(first_pass, np.zeros_like(first_pass), np.zeros_like(first_pass))
-        second_pass = np.logical_not(one_pass(first_pass_xyz, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.05, single_thread=single_thread))
+        second_pass = np.logical_not(one_pass(first_pass_xyz, y_threshold=0.08, kernel_margin=4, ratio_threshold=0.05,
+                                              single_thread=single_thread))
         return np.logical_or(first_pass, second_pass)
     else:
         return first_pass
@@ -182,7 +192,8 @@ def one_pass(original_image, y_threshold, kernel_margin, ratio_threshold, single
 
     adjacency_martix_holder = AdjacentMatrixHolder(kernel_margin)
 
-    equality_masks = calculations.equality_matrices(original_image, kernel_margin, y_threshold, adjacency_martix_holder.offsets)
+    equality_masks = calculations.equality_matrices(original_image, kernel_margin, y_threshold,
+                                                    adjacency_martix_holder.offsets)
 
     flood_fill_result = np.zeros((original_image.h, original_image.w), dtype=np.bool)
 
