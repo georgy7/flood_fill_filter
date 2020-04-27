@@ -32,6 +32,7 @@ import functools
 
 __all__ = (
     'read_linear',
+    'pil_image_to_linear',
     'filter',
     'to_8_bit',
     'save'
